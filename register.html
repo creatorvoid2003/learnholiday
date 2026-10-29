@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account | LearnHoliday</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="auth-page">
+  <header class="site-header">
+    <a class="brand" href="index.html">Learn<span>Holiday</span></a>
+    <nav class="main-nav">
+      <a href="index.html">Home</a>
+      <a href="courses.html">Courses</a>
+      <a href="study-centre.html">Study Centre</a>
+      <a href="classroom.html">Classroom</a>
+    </nav>
+    <div class="header-actions">
+      <a class="button button-outline" href="login.html">Log in</a>
+    </div>
+  </header>
+
+  <main class="auth-container">
+    <section class="auth-card">
+      <p class="eyebrow">START LEARNING</p>
+      <h1>Create your account</h1>
+      <p>Join LearnHoliday and explore educational resources.</p>
+
+      <form id="register-form">
+        <label for="register-name">Full name</label>
+        <input
+          id="register-name"
+          name="fullName"
+          type="text"
+          placeholder="Enter your full name"
+          autocomplete="name"
+          minlength="2"
+          maxlength="100"
+          required
+        >
+
+        <label for="register-email">Email address</label>
+        <input
+          id="register-email"
+          name="email"
+          type="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        >
+
+        <label for="register-level">Learning level</label>
+        <select id="register-level" name="learningLevel" required>
+          <option value="">Choose your level</option>
+          <option value="primary">Primary</option>
+          <option value="lower-secondary">Lower secondary</option>
+          <option value="upper-secondary">Upper secondary</option>
+          <option value="other">Other</option>
+        </select>
+
+        <label for="register-password">Create password</label>
+        <input
+          id="register-password"
+          name="password"
+          type="password"
+          placeholder="At least 8 characters"
+          autocomplete="new-password"
+          minlength="8"
+          required
+        >
+
+        <label for="register-confirm">Confirm password</label>
+        <input
+          id="register-confirm"
+          name="confirmPassword"
+          type="password"
+          placeholder="Enter your password again"
+          autocomplete="new-password"
+          minlength="8"
+          required
+        >
+
+        <button class="button button-primary button-full" type="submit">
+          Create account
+        </button>
+
+        <p id="register-message" class="form-message" aria-live="polite"></p>
+      </form>
+
+      <p class="auth-switch">
+        Already have an account?
+        <a href="login.html">Log in</a>
+      </p>
+      <a class="text-link" href="index.html">← Back to home</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="current-year">2026</span> LearnHoliday</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/app.js" defer></script>
+</body>
+</html>

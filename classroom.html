@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Classroom | LearnHoliday</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">Learn<span>Holiday</span></a>
+    <nav class="main-nav">
+      <a href="index.html">Home</a>
+      <a href="courses.html">Courses</a>
+      <a href="study-centre.html">Study Centre</a>
+      <a class="active" href="classroom.html">Classroom</a>
+      <a href="dashboard.html">My Learning</a>
+    </nav>
+    <div class="header-actions">
+      <a class="button button-outline" href="login.html">Log in</a>
+      <a class="button button-primary" href="register.html">Join free</a>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <section class="page-heading">
+      <p class="eyebrow">LEARN TOGETHER</p>
+      <h1>Virtual Classroom</h1>
+      <p>A space for online lessons, teacher guidance and collaborative learning.</p>
+    </section>
+
+    <section class="section classroom-layout">
+      <div class="classroom-main">
+        <div class="classroom-screen">
+          <div class="screen-indicator">
+            <span class="status-dot"></span>
+            CLASSROOM PREVIEW
+          </div>
+          <div class="screen-content">
+            <div class="learning-symbol">LH</div>
+            <h2>Your online classroom</h2>
+            <p>Live lessons will appear here once a classroom service is connected.</p>
+          </div>
+        </div>
+
+        <div class="feature-grid classroom-features">
+          <article class="feature-card">
+            <h3>Live lessons</h3>
+            <p>Planned teacher-led video lessons and discussions.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Class resources</h3>
+            <p>Planned sharing of lesson materials and revision notes.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Questions and answers</h3>
+            <p>Planned space for learners to ask questions and get guidance.</p>
+          </article>
+        </div>
+      </div>
+
+      <aside class="classroom-sidebar">
+        <h2>Join a class</h2>
+        <p>When classroom sessions are implemented, your teacher will provide the joining details.</p>
+        <form id="classroom-form">
+          <label for="class-code">Class code</label>
+          <input
+            id="class-code"
+            name="classCode"
+            type="text"
+            placeholder="Enter class code"
+            autocomplete="off"
+          >
+          <button class="button button-primary" type="submit">Check code</button>
+          <p id="classroom-message" class="small-note" aria-live="polite"></p>
+        </form>
+        <p class="small-note">
+          Joining is not active yet. Do not enter passwords or private information here.
+        </p>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="brand" href="index.html">Learn<span>Holiday</span></a>
+    <p>© <span id="current-year">2026</span> LearnHoliday</p>
+  </footer>
+
+  <script src="assets/js/app.js" defer></script>
+</body>
+</html>
