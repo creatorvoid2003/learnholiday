@@ -1,4 +1,4 @@
 window.LEARNHOLIDAY_SUPABASE_CONFIG = {
   url: "https://qczzvfsofyemhzafbxfm.supabase.co",
-  anonKey: "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE"
+  anonKey: "sb_publishable_uF3IsjkAU2uIeeQYx8EMAw_Ok16_VMC"
 };
