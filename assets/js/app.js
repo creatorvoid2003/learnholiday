@@ -622,7 +622,7 @@ const LearnHoliday = (() => {
     root.textContent = "Loading lesson...";
     try {
       const { data: lesson, error } = await client.from("course_lessons")
-        .select("id,title,summary,content,lesson_order,course_id,courses(title)")
+        .select("id,title,summary,content,lesson_order,course_id,courses(title),learning_objectives,explanation,worked_example,practice_task,expected_result,learner_exercise,key_takeaways")
         .eq("id", id).eq("published", true).single();
       if (error) throw error;
       const { data: authData } = await client.auth.getUser();
@@ -643,11 +643,38 @@ const LearnHoliday = (() => {
         '<a class="button button-outline" href="course.html?id=' + encodeURIComponent(lesson.course_id) + '">Back to course</a></div>' +
         '<p id="lesson-message" role="status"></p>';
       const content = root.querySelector(".lesson-content");
-      lesson.content.split("\n").forEach(line => {
-        const p = document.createElement("p");
-        p.textContent = line;
-        content.appendChild(p);
-      });
+      const addSection = (heading, body, className) => {
+        const section = document.createElement("section");
+        section.className = "lesson-section " + (className || "");
+        const h = document.createElement("h2");
+        h.textContent = heading;
+        section.appendChild(h);
+        if (Array.isArray(body)) {
+          const list = document.createElement("ul");
+          body.forEach(item => { const li = document.createElement("li"); li.textContent = item; list.appendChild(li); });
+          section.appendChild(list);
+        } else {
+          const p = document.createElement("p");
+          p.textContent = body || "";
+          section.appendChild(p);
+        }
+        content.appendChild(section);
+      };
+      addSection("1. Learning objectives", lesson.learning_objectives || []);
+      addSection("2. Introduction and explanation", lesson.explanation || lesson.content);
+      const example = document.createElement("section");
+      example.className = "lesson-section";
+      const exampleTitle = document.createElement("h2");
+      exampleTitle.textContent = "3. Worked example";
+      const pre = document.createElement("pre");
+      pre.className = "lesson-code-example";
+      pre.textContent = lesson.worked_example || lesson.content;
+      example.append(exampleTitle, pre);
+      content.appendChild(example);
+      addSection("4. Guided practice", lesson.practice_task);
+      addSection("5. Expected result", lesson.expected_result);
+      addSection("6. Your exercise", lesson.learner_exercise);
+      addSection("7. Key takeaways", lesson.key_takeaways || []);
 
       // Load and mark the lesson quiz
       const { data: quizQuestions, error: quizError } = await client
