@@ -648,6 +648,60 @@ const LearnHoliday = (() => {
         p.textContent = line;
         content.appendChild(p);
       });
+
+      // Load and mark the lesson quiz
+      const { data: quizQuestions, error: quizError } = await client
+        .from("lesson_quiz_questions")
+        .select("id,question,options,question_order")
+        .eq("lesson_id", id)
+        .eq("published", true)
+        .order("question_order");
+      if (quizError) throw quizError;
+
+      if (quizQuestions && quizQuestions.length) {
+        const quiz = document.createElement("section");
+        quiz.className = "lesson-quiz resource-card";
+        quiz.innerHTML = '<div class="resource-info"><p class="eyebrow">KNOWLEDGE CHECK</p><h2>Test what you learned</h2><p>Choose one answer for each question, then submit your quiz.</p><form id="lesson-quiz-form">' +
+          quizQuestions.map((q, index) => '<fieldset class="quiz-question"><legend>' + (index + 1) + '. ' + escapeHTML(q.question) + '</legend>' +
+            (Array.isArray(q.options) ? q.options : []).map((option, optionIndex) =>
+              '<label class="quiz-option"><input type="radio" name="question-' + index + '" value="' + optionIndex + '" required> ' + escapeHTML(option) + '</label>'
+            ).join("") + '</fieldset>'
+          ).join("") + '<button class="button button-primary" type="submit">Submit quiz</button></form><p id="quiz-result" role="status"></p></div>';
+        root.insertBefore(quiz, root.querySelector(".lesson-actions"));
+        const quizForm = quiz.querySelector("#lesson-quiz-form");
+        quizForm.addEventListener("submit", async event => {
+          event.preventDefault();
+          const submit = quizForm.querySelector('button[type="submit"]');
+          submit.disabled = true;
+          const answers = quizQuestions.map((q, index) => {
+            const selected = quizForm.querySelector('input[name="question-' + index + '"]:checked');
+            return selected ? Number(selected.value) : -1;
+          });
+          try {
+            const { data: marked, error: markError } = await client.rpc("grade_lesson_quiz", {
+              p_lesson_id: id,
+              p_answers: answers
+            });
+            if (markError) throw markError;
+            const result = Array.isArray(marked) ? marked[0] : marked;
+            const score = Number(result.score);
+            const total = Number(result.total_questions);
+            const resultBox = quiz.querySelector("#quiz-result");
+            resultBox.textContent = 'Your score: ' + score + ' out of ' + total + ' (' + Math.round(score / total * 100) + '%). ' + (score === total ? 'Excellent work!' : 'Review the lesson and try again.');
+            resultBox.className = "success";
+          } catch (quizSubmitError) {
+            console.error("Quiz submission error:", quizSubmitError);
+            setMessage(quiz.querySelector("#quiz-result"), "Could not save your quiz. Please log in and try again.", "error");
+          } finally {
+            submit.disabled = false;
+          }
+        });
+      } else {
+        const note = document.createElement("p");
+        note.textContent = "A quiz for this lesson will be added soon.";
+        root.insertBefore(note, root.querySelector(".lesson-actions"));
+      }
+
       const completeButton = document.getElementById("lesson-complete");
       if (completeButton) completeButton.addEventListener("click", async () => {
         completeButton.disabled = true;
