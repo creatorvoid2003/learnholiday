@@ -48,76 +48,10 @@
       </div>
 
       <div class="resource-list" id="resource-list">
-        <article class="resource-card" data-subject="mathematics">
-          <div class="resource-type">NOTES</div>
-          <div class="resource-info">
-            <p class="eyebrow">MATHEMATICS</p>
-            <h2>Introduction to Algebra</h2>
-            <p>Review variables, expressions and simple equations.</p>
-            <span class="small-note">Sample resource</span>
-          </div>
-          <button
-            class="button button-outline save-resource"
-            type="button"
-            data-resource-id="algebra-notes"
-            data-resource-title="Introduction to Algebra"
-          >Save resource</button>
-        </article>
-
-        <article class="resource-card" data-subject="science">
-          <div class="resource-type">REVISION</div>
-          <div class="resource-info">
-            <p class="eyebrow">SCIENCE</p>
-            <h2>Introduction to Scientific Investigation</h2>
-            <p>Explore observations, questions, experiments and conclusions.</p>
-            <span class="small-note">Sample resource</span>
-          </div>
-          <button
-            class="button button-outline save-resource"
-            type="button"
-            data-resource-id="science-investigation"
-            data-resource-title="Introduction to Scientific Investigation"
-          >Save resource</button>
-        </article>
-
-        <article class="resource-card" data-subject="english">
-          <div class="resource-type">NOTES</div>
-          <div class="resource-info">
-            <p class="eyebrow">ENGLISH</p>
-            <h2>Grammar and Sentence Structure</h2>
-            <p>Review sentence construction and common grammar concepts.</p>
-            <span class="small-note">Sample resource</span>
-          </div>
-          <button
-            class="button button-outline save-resource"
-            type="button"
-            data-resource-id="english-grammar"
-            data-resource-title="Grammar and Sentence Structure"
-          >Save resource</button>
-        </article>
-
-        <article class="resource-card" data-subject="ict">
-          <div class="resource-type">GUIDE</div>
-          <div class="resource-info">
-            <p class="eyebrow">ICT</p>
-            <h2>Computer Basics</h2>
-            <p>Learn about computer hardware, software and file management.</p>
-            <span class="small-note">Sample resource</span>
-          </div>
-          <button
-            class="button button-outline save-resource"
-            type="button"
-            data-resource-id="computer-basics"
-            data-resource-title="Computer Basics"
-          >Save resource</button>
-        </article>
+        <p>Loading published study resources...</p>
       </div>
-
       <p id="resource-empty" hidden>No resources match your search.</p>
-      <p class="small-note">
-        The resources above are examples, not complete lesson notes.
-        Saving currently requires the shared JavaScript functionality.
-      </p>
+      <p class="small-note">Published resources are loaded from LearnHoliday. Log in to save them to your account.</p>
     </section>
   </main>
 
@@ -126,6 +60,8 @@
     <p>© <span id="current-year">2026</span> LearnHoliday</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
   <script src="assets/js/app.js" defer></script>
 </body>
 </html>
