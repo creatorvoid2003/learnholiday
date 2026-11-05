@@ -676,6 +676,73 @@ const LearnHoliday = (() => {
       addSection("6. Your exercise", lesson.learner_exercise);
       addSection("7. Key takeaways", lesson.key_takeaways || []);
 
+      // Interactive coding workspace for programming lessons.
+      const courseLower = courseName.toLowerCase();
+      if (courseLower.includes("html") || courseLower.includes("css") || courseLower.includes("javascript")) {
+        const workspace = document.createElement("section");
+        workspace.className = "practice-workspace resource-card";
+        workspace.innerHTML = '<div class="resource-info"><p class="eyebrow">HANDS-ON PRACTICE</p><h2>Practice in LearnHoliday</h2><p>Make changes to the code and run it to see what happens. Your work runs in an isolated preview.</p><div class="practice-editor-grid">' +
+          '<label class="practice-field"><span>HTML</span><textarea id="practice-html" spellcheck="false" rows="10"><h1>Hello, LearnHoliday!</h1>\n<p>I am practising web development.</p>\n<button>Click me</button></textarea></label>' +
+          '<label class="practice-field"><span>CSS</span><textarea id="practice-css" spellcheck="false" rows="10">body {\n  font-family: Arial, sans-serif;\n  padding: 24px;\n  background: #f2f0ff;\n}\nh1 { color: #5145cd; }</textarea></label></div>' +
+          '<div class="practice-controls"><button class="button button-primary" id="run-web-practice" type="button">Run HTML &amp; CSS</button><button class="button button-outline" id="reset-web-practice" type="button">Reset example</button></div>' +
+          '<h3>Live preview</h3><iframe id="web-practice-preview" title="HTML and CSS practice preview" sandbox=""></iframe>' +
+          '<div class="js-practice-area"><h3>JavaScript practice</h3><label class="practice-field"><span>JavaScript code</span><textarea id="practice-js" spellcheck="false" rows="8">console.log("Hello from JavaScript!");\nconsole.log(2 + 3);</textarea></label>' +
+          '<div class="practice-controls"><button class="button button-primary" id="run-js-practice" type="button">Run JavaScript</button><button class="button button-outline" id="clear-js-output" type="button">Clear output</button></div>' +
+          '<pre id="js-practice-output" class="practice-output" aria-live="polite">Your JavaScript output will appear here.</pre></div></div>';
+        root.insertBefore(workspace, root.querySelector(".lesson-quiz") || root.querySelector(".lesson-actions"));
+        const htmlEditor = workspace.querySelector("#practice-html");
+        const cssEditor = workspace.querySelector("#practice-css");
+        const preview = workspace.querySelector("#web-practice-preview");
+        const runWeb = () => {
+          preview.srcdoc = "<!doctype html><html><head><meta charset='utf-8'><style>" +
+            cssEditor.value.replace(/<\\/style/gi, "<\\\\/style") +
+            "</style></head><body>" + htmlEditor.value + "</body></html>";
+        };
+        workspace.querySelector("#run-web-practice").addEventListener("click", runWeb);
+        workspace.querySelector("#reset-web-practice").addEventListener("click", () => {
+          htmlEditor.value = "<h1>Hello, LearnHoliday!</h1>\\n<p>I am practising web development.</p>\\n<button>Click me</button>";
+          cssEditor.value = "body {\\n  font-family: Arial, sans-serif;\\n  padding: 24px;\\n  background: #f2f0ff;\\n}\\nh1 { color: #5145cd; }";
+          runWeb();
+        });
+        runWeb();
+
+        const jsArea = workspace.querySelector(".js-practice-area");
+        if (courseLower.includes("javascript")) {
+          const output = workspace.querySelector("#js-practice-output");
+          const jsEditor = workspace.querySelector("#practice-js");
+          workspace.querySelector("#run-js-practice").addEventListener("click", () => {
+            const safeCode = JSON.stringify(jsEditor.value).replace(/</g, "\\\\u003c");
+            const frame = document.createElement("iframe");
+            frame.setAttribute("sandbox", "allow-scripts");
+            frame.title = "Isolated JavaScript practice runner";
+            frame.className = "js-runner-frame";
+            frame.srcdoc = "<!doctype html><meta charset='utf-8'><script>" +
+              "const send=(type,value)=>parent.postMessage({learnHolidayPractice:true,type,value:String(value)},'*');" +
+              "console.log=(...args)=>send('log',args.join(' '));" +
+              "console.error=(...args)=>send('error',args.join(' '));" +
+              "try { (new Function(" + safeCode + "))(); } catch(error) { send('error',error.message); }" +
+              "<\\/script>";
+            const oldFrame = workspace.querySelector(".js-runner-frame");
+            if (oldFrame) oldFrame.remove();
+            workspace.appendChild(frame);
+            output.textContent = "Running...";
+            const receiveOutput = event => {
+              if (event.source !== frame.contentWindow || !event.data || !event.data.learnHolidayPractice) return;
+              output.textContent = (output.textContent === "Running..." ? "" : output.textContent + "\\n") +
+                (event.data.type === "error" ? "Error: " : "") + event.data.value;
+            };
+            window.addEventListener("message", receiveOutput);
+            frame.addEventListener("load", () => {
+              window.removeEventListener("message", receiveOutput);
+              window.addEventListener("message", receiveOutput);
+            }, { once: true });
+          });
+          workspace.querySelector("#clear-js-output").addEventListener("click", () => { output.textContent = ""; });
+        } else {
+          jsArea.remove();
+        }
+      }
+
       // Load and mark the lesson quiz
       const { data: quizQuestions, error: quizError } = await client
         .from("lesson_quiz_questions")
