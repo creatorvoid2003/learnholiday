@@ -354,3 +354,18 @@ body.auth-page { display: flex; flex-direction: column; align-items: stretch; ju
 #quiz-result, #lesson-message { margin-top: 14px; font-weight: 700; }
 #quiz-result.success, #lesson-message.success { color: var(--success); }
 #quiz-result.error, #lesson-message.error { color: #b42318; }
+
+
+/* Interactive lesson practice workspace */
+.practice-workspace { display:block; margin-top:28px; padding:24px; }
+.practice-workspace h2 { margin:6px 0 10px; color:var(--navy); }
+.practice-workspace h3 { margin:22px 0 10px; color:var(--navy); font:800 1rem Manrope,sans-serif; }
+.practice-editor-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:18px 0; }
+.practice-field { display:flex; flex-direction:column; gap:8px; min-width:0; color:var(--navy); font-weight:800; }
+.practice-field span { font-size:.9rem; }
+.practice-field textarea { width:100%; min-height:190px; padding:14px; resize:vertical; border:1px solid var(--border); border-radius:12px; color:#e9eaff; background:#191b3b; font: .88rem/1.6 Consolas,Monaco,monospace; tab-size:2; }
+.practice-controls { display:flex; flex-wrap:wrap; gap:10px; margin:14px 0; }
+#web-practice-preview { display:block; width:100%; min-height:230px; border:1px solid var(--border); border-radius:12px; background:white; }
+.practice-output { min-height:75px; margin-top:12px; padding:16px; overflow:auto; border-radius:12px; color:#e9eaff; background:#191b3b; white-space:pre-wrap; overflow-wrap:anywhere; }
+.js-runner-frame { position:absolute; width:1px; height:1px; border:0; opacity:0; pointer-events:none; }
+@media (max-width:700px) { .practice-editor-grid { grid-template-columns:1fr; } .practice-workspace { padding:18px; } }
