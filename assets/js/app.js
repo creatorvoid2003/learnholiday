@@ -268,6 +268,35 @@ const LearnHoliday = (() => {
     }
   }
 
+  /* SHARED NAVIGATION AUTHENTICATION */
+  async function setupNavigationAuth() {
+    const actions = document.querySelector(".header-actions");
+    if (!actions || document.getElementById("logout-button")) return;
+    const client = getSupabaseClient();
+    if (!client) return;
+    try {
+      const { data, error } = await client.auth.getUser();
+      if (error) throw error;
+      if (!data.user) return;
+      currentUser = data.user;
+      const displayName = data.user.user_metadata?.full_name || data.user.email || "Learner";
+      actions.innerHTML = '<span class="nav-user-label">Signed in as ' + escapeHTML(displayName) + '</span><a class="button button-outline" href="dashboard.html">My Learning</a><button class="button button-primary" id="nav-logout-button" type="button">Log out</button>';
+      document.getElementById("nav-logout-button")?.addEventListener("click", async () => {
+        const button = document.getElementById("nav-logout-button");
+        button.disabled = true;
+        const { error: logoutError } = await client.auth.signOut();
+        if (logoutError) {
+          console.error("Navigation logout error:", logoutError);
+          button.disabled = false;
+          return;
+        }
+        window.location.assign("login.html");
+      });
+    } catch (error) {
+      console.error("Navigation authentication check error:", error);
+    }
+  }
+
   /* DASHBOARD AUTHENTICATION */
 
   async function setupDashboardAuth() {
@@ -495,6 +524,7 @@ const LearnHoliday = (() => {
     updateYear();
     setupCourseFilters();
     setupResourceFilters();
+    await setupNavigationAuth();
     await setupResourceAuth();
     await loadStudyResources();
     setupClassroomForm();
