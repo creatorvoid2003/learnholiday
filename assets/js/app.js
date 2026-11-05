@@ -101,6 +101,66 @@ const LearnHoliday = (() => {
     applyFilters();
   }
 
+  /* DATABASE-DRIVEN COURSES */
+
+  async function loadCourses() {
+    const list = document.getElementById("course-list");
+    if (!list) return;
+
+    const client = getSupabaseClient();
+    if (!client) {
+      list.innerHTML = '<p class="small-note">Courses are temporarily unavailable. Please refresh and try again.</p>';
+      return;
+    }
+
+    list.innerHTML = '<p class="small-note">Loading published courses...</p>';
+
+    try {
+      const { data, error } = await client
+        .from("courses")
+        .select("id,title,description,subject,learning_level")
+        .eq("published", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        list.innerHTML = '<p class="small-note">No courses have been published yet. Please check back soon.</p>';
+        return;
+      }
+
+      const banners = ["banner-cyan", "banner-purple", "banner-blue", "banner-dark"];
+      list.innerHTML = data.map((course, index) => {
+        const subject = String(course.subject || "General");
+        const subjectKey = subject.toLowerCase();
+        const banner = banners[index % banners.length];
+
+        return '<article class="course-card" data-subject="' + escapeHTML(subjectKey) + '">' +
+          '<div class="course-banner ' + banner + '">' + escapeHTML(subject.toUpperCase()) + '</div>' +
+          '<div class="course-body">' +
+          '<p class="eyebrow">' + escapeHTML(course.learning_level || "ALL LEVELS") + '</p>' +
+          '<h2>' + escapeHTML(course.title) + '</h2>' +
+          '<p>' + escapeHTML(course.description || "Explore this course and build your knowledge.") + '</p>' +
+          '<a class="button button-primary" href="study-centre.html">Explore study resources</a>' +
+          '</div></article>';
+      }).join("");
+
+      const filter = document.getElementById("course-filter");
+      if (filter) {
+        const subjects = [...new Set(data.map(course => String(course.subject || "General")))]
+          .sort((a, b) => a.localeCompare(b));
+        filter.innerHTML = '<option value="all">All subjects</option>' +
+          subjects.map(subject => '<option value="' + escapeHTML(subject.toLowerCase()) + '">' +
+            escapeHTML(subject) + '</option>').join("");
+      }
+
+      setupCourseFilters();
+    } catch (error) {
+      console.error("Course loading error:", error);
+      list.innerHTML = '<p class="small-note">We could not load courses. Please refresh the page and try again.</p>';
+    }
+  }
+
   /* STUDY RESOURCE SEARCH */
 
   function setupResourceFilters() {
@@ -525,6 +585,7 @@ const LearnHoliday = (() => {
     updateYear();
     setupCourseFilters();
     setupResourceFilters();
+    await loadCourses();
     await setupNavigationAuth();
     await setupResourceAuth();
     await loadStudyResources();
@@ -541,6 +602,7 @@ const LearnHoliday = (() => {
     saveResource,
     removeResource,
     loadStudyResources,
+    loadCourses,
     renderDashboard,
     getSupabaseClient,
     setupDashboardAuth
