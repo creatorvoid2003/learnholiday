@@ -805,6 +805,68 @@ const LearnHoliday = (() => {
         });
       }
 
+      // Save and restore this learner's practice work for the current lesson.
+      const practiceWorkspaces = Array.from(root.querySelectorAll(".practice-workspace"));
+      if (practiceWorkspaces.length) {
+        const practiceFields = practiceWorkspaces.flatMap(workspace =>
+          Array.from(workspace.querySelectorAll("textarea[id], input[id]"))
+        );
+        let savedPractice = {};
+        if (currentUser) {
+          const { data: savedRow, error: savedError } = await client
+            .from("lesson_practice_submissions")
+            .select("practice_data")
+            .eq("user_id", currentUser.id)
+            .eq("lesson_id", id)
+            .maybeSingle();
+          if (savedError) throw savedError;
+          savedPractice = savedRow && savedRow.practice_data && typeof savedRow.practice_data === "object"
+            ? savedRow.practice_data : {};
+          practiceFields.forEach(field => {
+            if (Object.prototype.hasOwnProperty.call(savedPractice, field.id)) {
+              field.value = String(savedPractice[field.id] ?? "");
+            }
+          });
+        }
+
+        const savePanel = document.createElement("section");
+        savePanel.className = "practice-save-panel";
+        savePanel.innerHTML = '<button class="button button-primary" id="save-practice-work" type="button">Save my practice work</button><p id="practice-save-message" role="status" aria-live="polite"></p>';
+        root.insertBefore(savePanel, root.querySelector(".lesson-quiz") || root.querySelector(".lesson-actions"));
+        if (!currentUser) {
+          savePanel.querySelector("#save-practice-work").disabled = true;
+          setMessage(savePanel.querySelector("#practice-save-message"), "Log in to save your practice work across devices.");
+        } else {
+          setMessage(savePanel.querySelector("#practice-save-message"),
+            Object.keys(savedPractice).length ? "Your previously saved work has been restored." : "Your work is not saved until you select Save my practice work.");
+          savePanel.querySelector("#save-practice-work").addEventListener("click", async () => {
+            const saveButton = savePanel.querySelector("#save-practice-work");
+            const status = savePanel.querySelector("#practice-save-message");
+            saveButton.disabled = true;
+            setMessage(status, "Saving your work...");
+            const practiceData = {};
+            practiceFields.forEach(field => { practiceData[field.id] = field.value; });
+            try {
+              const { error: saveError } = await client
+                .from("lesson_practice_submissions")
+                .upsert({
+                  user_id: currentUser.id,
+                  lesson_id: id,
+                  practice_data: practiceData,
+                  updated_at: new Date().toISOString()
+                }, { onConflict: "user_id,lesson_id" });
+              if (saveError) throw saveError;
+              setMessage(status, "Practice work saved. It will be restored when you return to this lesson.", "success");
+            } catch (saveError) {
+              console.error("Practice save error:", saveError);
+              setMessage(status, saveError.message || "Could not save your work. Please try again.", "error");
+            } finally {
+              saveButton.disabled = false;
+            }
+          });
+        }
+      }
+
       // Load and mark the lesson quiz
       const { data: quizQuestions, error: quizError } = await client
         .from("lesson_quiz_questions")
