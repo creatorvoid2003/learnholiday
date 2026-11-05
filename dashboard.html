@@ -3,68 +3,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Learning | LearnHoliday</title>
-  <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
-
-  <header class="site-header">
-    <a class="brand" href="index.html">
-      Learn<span>Holiday</span>
-    </a>
-
-    <nav class="main-nav">
-      <a href="index.html">Home</a>
-      <a href="courses.html">Courses</a>
-      <a href="study-centre.html">Study Centre</a>
-      <a href="classroom.html">Classroom</a>
-      <a class="active" href="dashboard.html">My Learning</a>
-    </nav>
-
-    <div class="header-actions">
-      <span id="learner-name">Loading account...</span>
-      <button
-        class="button button-outline"
-        id="logout-button"
-        type="button"
-      >
-        Log out
-      </button>
-    </div>
-  </header>
-
-  <main class="page-main">
-
-    <section class="page-heading">
-      <p class="eyebrow">YOUR PERSONAL LEARNING SPACE</p>
-      <h1>Welcome, <span id="dashboard-name">Learner</span>!</h1>
-      <p>Review your learning activities and continue exploring new subjects.</p>
-      <p id="dashboard-message" class="form-message" aria-live="polite"></p>
-    </section>
-
-    <section class="section">
-      <div class="dashboard-grid">
-
-        <article class="stat-card">
-          <span class="stat-label">Saved resources</span>
-          <strong id="saved-count">0</strong>
-          <p>Resources saved in this browser</p>
-        </article>
-
-        <article class="stat-card">
-          <span class="stat-label">Completed activities</span>
-          <strong id="completed-count">0</strong>
-          <p>Activities marked as completed</p>
-        </article>
-
-        <article class="stat-card">
-          <span class="stat-label">Learning status</span>
-          <strong id="learning-status">Active</strong>
-          <p>Your personal learning space</p>
-        </article>
-
+  <meta name="view<section class="section">
+      <div class="section-heading"><div>
+        <p class="eyebrow">YOUR LEARNING JOURNEY</p>
+        <h2>Course progress</h2>
+        <p>See what you have completed and pick up where you left off.</p>
+      </div></div>
+      <div class="progress-overview">
+        <article class="stat-card"><span class="stat-label">Lessons completed</span><strong id="lessons-completed-total">0 / 0</strong><p>Across all published courses</p></article>
+        <article class="stat-card"><span class="stat-label">Overall progress</span><strong id="overall-progress">0%</strong><p>Completed lessons across your courses</p></article>
       </div>
+      <div id="course-progress-list" class="course-progress-list" aria-live="polite"><p class="small-note">Your course progress will appear here.</p></div>
     </section>
 
     <section class="section">
