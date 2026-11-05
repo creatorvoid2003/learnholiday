@@ -716,6 +716,25 @@ const LearnHoliday = (() => {
             const resultBox = quiz.querySelector("#quiz-result");
             resultBox.textContent = 'Your score: ' + score + ' out of ' + total + ' (' + Math.round(score / total * 100) + '%). ' + (score === total ? 'Excellent work!' : 'Review the lesson and try again.');
             resultBox.className = "success";
+
+            // Automatically complete the lesson after a quiz has been successfully graded.
+            if (currentUser && !completed) {
+              const { error: progressSaveError } = await client.from("lesson_progress").upsert({
+                user_id: currentUser.id,
+                lesson_id: id,
+                is_completed: true,
+                completed_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }, { onConflict: "user_id,lesson_id" });
+              if (progressSaveError) throw progressSaveError;
+              completed = true;
+              const completeButton = document.getElementById("lesson-complete");
+              if (completeButton) {
+                completeButton.textContent = "Completed ✓";
+                completeButton.disabled = true;
+              }
+              setMessage(document.getElementById("lesson-message"), "Quiz submitted. Lesson automatically marked as completed.", "success");
+            }
           } catch (quizSubmitError) {
             console.error("Quiz submission error:", quizSubmitError);
             setMessage(quiz.querySelector("#quiz-result"), "Could not save your quiz. Please log in and try again.", "error");
