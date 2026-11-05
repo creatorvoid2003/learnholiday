@@ -254,6 +254,20 @@ const LearnHoliday = (() => {
     }
   }
 
+  async function setupResourceAuth() {
+    if (!document.getElementById("resource-list")) return;
+    const client = getSupabaseClient();
+    if (!client) return;
+    try {
+      const { data, error } = await client.auth.getUser();
+      if (error) throw error;
+      currentUser = data.user || null;
+      if (currentUser) await loadUserProgress();
+    } catch (error) {
+      console.error("Resource account check error:", error);
+    }
+  }
+
   /* DASHBOARD AUTHENTICATION */
 
   async function setupDashboardAuth() {
@@ -481,6 +495,7 @@ const LearnHoliday = (() => {
     updateYear();
     setupCourseFilters();
     setupResourceFilters();
+    await setupResourceAuth();
     await loadStudyResources();
     setupClassroomForm();
     setupRegistration();
