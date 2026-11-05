@@ -579,10 +579,107 @@ const LearnHoliday = (() => {
     });
   }
 
+
+  /* COURSE AND LESSON PAGES */
+  function pageParam(name) {
+    return new URLSearchParams(window.location.search).get(name);
+  }
+
+  async function setupCoursePage() {
+    const root = document.getElementById("course-detail");
+    if (!root) return;
+    const id = pageParam("id");
+    if (!id) { root.textContent = "No course was selected. Return to Courses and choose a course."; return; }
+    const client = getSupabaseClient();
+    if (!client) { root.textContent = "Course service is unavailable. Refresh and try again."; return; }
+    root.textContent = "Loading course...";
+    try {
+      const [{ data: course, error: courseError }, { data: lessons, error: lessonError }] = await Promise.all([
+        client.from("courses").select("id,title,description,subject,learning_level").eq("id", id).eq("published", true).single(),
+        client.from("course_lessons").select("id,title,summary,lesson_order").eq("course_id", id).eq("published", true).order("lesson_order")
+      ]);
+      if (courseError) throw courseError;
+      if (lessonError) throw lessonError;
+      root.innerHTML = '<p class="eyebrow">' + escapeHTML(course.subject || "COURSE") + ' · ' + escapeHTML(course.learning_level || "ALL LEVELS") + '</p>' +
+        '<h1>' + escapeHTML(course.title) + '</h1><p>' + escapeHTML(course.description || "") + '</p>' +
+        '<h2>Course lessons</h2>' +
+        (lessons && lessons.length ? '<div class="resource-list">' + lessons.map(lesson =>
+          '<article class="resource-card"><div class="resource-info"><p class="eyebrow">LESSON ' + lesson.lesson_order + '</p><h2>' + escapeHTML(lesson.title) + '</h2><p>' + escapeHTML(lesson.summary || "") + '</p><a class="button button-primary" href="lesson.html?id=' + encodeURIComponent(lesson.id) + '">Open lesson</a></div></article>'
+        ).join("") + '</div>' : '<p>No lessons have been published for this course yet.</p>');
+    } catch (error) {
+      console.error("Course page error:", error);
+      root.textContent = "Could not load this course. Please refresh and try again.";
+    }
+  }
+
+  async function setupLessonPage() {
+    const root = document.getElementById("lesson-detail");
+    if (!root) return;
+    const id = pageParam("id");
+    if (!id) { root.textContent = "No lesson was selected. Return to the course page."; return; }
+    const client = getSupabaseClient();
+    if (!client) { root.textContent = "Lesson service is unavailable. Refresh and try again."; return; }
+    root.textContent = "Loading lesson...";
+    try {
+      const { data: lesson, error } = await client.from("course_lessons")
+        .select("id,title,summary,content,lesson_order,course_id,courses(title)")
+        .eq("id", id).eq("published", true).single();
+      if (error) throw error;
+      const { data: authData } = await client.auth.getUser();
+      currentUser = authData.user || null;
+      let completed = false;
+      if (currentUser) {
+        const { data: progress, error: progressError } = await client.from("lesson_progress")
+          .select("is_completed").eq("user_id", currentUser.id).eq("lesson_id", id).maybeSingle();
+        if (progressError) throw progressError;
+        completed = Boolean(progress && progress.is_completed);
+      }
+      const courseName = lesson.courses && lesson.courses.title ? lesson.courses.title : "Course";
+      root.innerHTML = '<p class="eyebrow">' + escapeHTML(courseName) + ' · LESSON ' + lesson.lesson_order + '</p>' +
+        '<h1>' + escapeHTML(lesson.title) + '</h1><p>' + escapeHTML(lesson.summary || "") + '</p>' +
+        '<article class="resource-card"><div class="resource-info lesson-content"></div></article>' +
+        '<div class="lesson-actions">' +
+        (currentUser ? '<button class="button button-primary" id="lesson-complete" type="button">' + (completed ? 'Completed ✓' : 'Mark as completed') + '</button>' : '<p><a href="login.html">Log in</a> to save your lesson progress.</p>') +
+        '<a class="button button-outline" href="course.html?id=' + encodeURIComponent(lesson.course_id) + '">Back to course</a></div>' +
+        '<p id="lesson-message" role="status"></p>';
+      const content = root.querySelector(".lesson-content");
+      lesson.content.split("\n").forEach(line => {
+        const p = document.createElement("p");
+        p.textContent = line;
+        content.appendChild(p);
+      });
+      const completeButton = document.getElementById("lesson-complete");
+      if (completeButton) completeButton.addEventListener("click", async () => {
+        completeButton.disabled = true;
+        try {
+          const result = await client.from("lesson_progress").upsert({
+            user_id: currentUser.id,
+            lesson_id: id,
+            is_completed: !completed,
+            completed_at: !completed ? new Date().toISOString() : null,
+            updated_at: new Date().toISOString()
+          }, { onConflict: "user_id,lesson_id" });
+          if (result.error) throw result.error;
+          completed = !completed;
+          completeButton.textContent = completed ? "Completed ✓" : "Mark as completed";
+          setMessage(document.getElementById("lesson-message"), completed ? "Lesson marked as completed." : "Lesson marked as not completed.", "success");
+        } catch (e) {
+          console.error("Lesson progress error:", e);
+          setMessage(document.getElementById("lesson-message"), "Could not save progress. Please try again.", "error");
+        } finally { completeButton.disabled = false; }
+      });
+    } catch (error) {
+      console.error("Lesson page error:", error);
+      root.textContent = "Could not load this lesson. Please refresh and try again.";
+    }
+  }
+
   /* STARTUP */
 
   async function init() {
     updateYear();
+    await setupCoursePage();
+    await setupLessonPage();
     setupCourseFilters();
     setupResourceFilters();
     await loadCourses();
