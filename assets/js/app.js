@@ -695,7 +695,7 @@ const LearnHoliday = (() => {
         const preview = workspace.querySelector("#web-practice-preview");
         const runWeb = () => {
           preview.srcdoc = "<!doctype html><html><head><meta charset='utf-8'><style>" +
-            cssEditor.value.replace(/<\\/style/gi, "<\\\\/style") +
+            cssEditor.value +
             "</style></head><body>" + htmlEditor.value + "</body></html>";
         };
         workspace.querySelector("#run-web-practice").addEventListener("click", runWeb);
