@@ -393,6 +393,7 @@ const LearnHoliday = (() => {
       await loadUserProgress();
       renderDashboard();
       updateSaveButtons();
+      await loadLearningOverview();
       const name =
         user.user_metadata?.full_name ||
         user.email ||
@@ -430,6 +431,54 @@ const LearnHoliday = (() => {
         error.message || "Could not load your account.",
         "error"
       );
+    }
+  }
+
+  /* COURSE-BY-COURSE LEARNING OVERVIEW */
+  async function loadLearningOverview() {
+    const container = document.getElementById("course-progress-list");
+    const totalNode = document.getElementById("lessons-completed-total");
+    const overallNode = document.getElementById("overall-progress");
+    if (!container || !currentUser) return;
+    container.textContent = "Loading your course progress...";
+    try {
+      const client = getSupabaseClient();
+      const { data: courses, error: courseError } = await client
+        .from("courses").select("id,title,subject").eq("published", true)
+        .order("created_at", { ascending: false });
+      if (courseError) throw courseError;
+      const { data: lessons, error: lessonError } = await client
+        .from("course_lessons").select("id,course_id,title,lesson_order")
+        .eq("published", true).order("lesson_order", { ascending: true });
+      if (lessonError) throw lessonError;
+      const { data: progress, error: progressError } = await client
+        .from("lesson_progress").select("lesson_id,is_completed")
+        .eq("user_id", currentUser.id);
+      if (progressError) throw progressError;
+
+      const completedIds = new Set((progress || []).filter(row => row.is_completed).map(row => row.lesson_id));
+      const allLessons = lessons || [];
+      const completedTotal = allLessons.filter(lesson => completedIds.has(lesson.id)).length;
+      const overall = allLessons.length ? Math.round(completedTotal / allLessons.length * 100) : 0;
+      if (totalNode) totalNode.textContent = completedTotal + " / " + allLessons.length;
+      if (overallNode) overallNode.textContent = overall + "%";
+      if (!courses || !courses.length) {
+        container.textContent = "No published courses are available yet.";
+        return;
+      }
+      container.innerHTML = courses.map(course => {
+        const courseLessons = allLessons.filter(lesson => lesson.course_id === course.id);
+        const done = courseLessons.filter(lesson => completedIds.has(lesson.id)).length;
+        const percent = courseLessons.length ? Math.round(done / courseLessons.length * 100) : 0;
+        const next = courseLessons.find(lesson => !completedIds.has(lesson.id));
+        const action = next
+          ? '<a class="button button-primary" href="lesson.html?id=' + encodeURIComponent(next.id) + '">Continue: ' + escapeHTML(next.title) + '</a>'
+          : (courseLessons.length ? '<span class="progress-finished">All lessons completed ✓</span>' : '<span class="small-note">Lessons coming soon</span>');
+        return '<article class="course-progress-card"><div class="course-progress-top"><div><p class="eyebrow">' + escapeHTML(course.subject || "COURSE") + '</p><h3>' + escapeHTML(course.title) + '</h3></div><strong>' + percent + '%</strong></div><div class="progress-track" role="progressbar" aria-label="' + escapeHTML(course.title) + ' progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + percent + '"><span style="width:' + percent + '%"></span></div><p class="progress-caption">' + done + ' of ' + courseLessons.length + ' lessons completed</p><div class="course-progress-action">' + action + '</div></article>';
+      }).join("");
+    } catch (error) {
+      console.error("Learning overview error:", error);
+      container.textContent = "We could not load your course progress. Please refresh and try again.";
     }
   }
 
@@ -993,7 +1042,8 @@ const LearnHoliday = (() => {
     loadCourses,
     renderDashboard,
     getSupabaseClient,
-    setupDashboardAuth
+    setupDashboardAuth,
+    loadLearningOverview
   };
 })();
 
