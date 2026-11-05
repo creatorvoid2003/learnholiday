@@ -369,3 +369,5 @@ body.auth-page { display: flex; flex-direction: column; align-items: stretch; ju
 .practice-output { min-height:75px; margin-top:12px; padding:16px; overflow:auto; border-radius:12px; color:#e9eaff; background:#191b3b; white-space:pre-wrap; overflow-wrap:anywhere; }
 .js-runner-frame { position:absolute; width:1px; height:1px; border:0; opacity:0; pointer-events:none; }
 @media (max-width:700px) { .practice-editor-grid { grid-template-columns:1fr; } .practice-workspace { padding:18px; } }
+\n
+.practice-field input { width:100%; min-height:46px; padding:12px 14px; border:1px solid var(--border); border-radius:10px; color:var(--text); background:#fff; font:inherit; }
