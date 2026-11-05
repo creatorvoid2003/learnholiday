@@ -743,6 +743,68 @@ const LearnHoliday = (() => {
         }
       }
 
+      // Subject-appropriate practice for mathematics and computer basics.
+      if (courseLower.includes("mathematics")) {
+        const titleLower = lesson.title.toLowerCase();
+        let prompt = "Calculate 25% of 200.";
+        let answer = "50";
+        let hint = "25% means 25 out of 100, or one quarter. Divide 200 by 4.";
+        if (titleLower.includes("fraction")) {
+          prompt = "Which fraction is equivalent to 1/2: 2/4, 2/3 or 3/4?";
+          answer = "2/4";
+          hint = "Multiply the numerator and denominator of 1/2 by the same number.";
+        } else if (titleLower.includes("algebra")) {
+          prompt = "Solve for x: x + 5 = 12.";
+          answer = "7";
+          hint = "Subtract 5 from both sides of the equation.";
+        }
+        const practice = document.createElement("section");
+        practice.className = "practice-workspace resource-card";
+        practice.innerHTML = '<div class="resource-info"><p class="eyebrow">MATHEMATICS PRACTICE</p><h2>Try it yourself</h2><p class="math-practice-question"></p><label class="practice-field"><span>Your answer</span><input id="math-practice-answer" type="text" autocomplete="off" placeholder="Enter your answer"></label><div class="practice-controls"><button class="button button-primary" id="check-math-answer" type="button">Check answer</button><button class="button button-outline" id="show-math-hint" type="button">Show hint</button></div><p id="math-practice-feedback" role="status" aria-live="polite"></p></div>';
+        practice.querySelector(".math-practice-question").textContent = prompt;
+        root.insertBefore(practice, root.querySelector(".lesson-quiz") || root.querySelector(".lesson-actions"));
+        practice.querySelector("#check-math-answer").addEventListener("click", () => {
+          const entered = practice.querySelector("#math-practice-answer").value.trim().toLowerCase().replace(/\\s+/g, "");
+          const expected = answer.toLowerCase().replace(/\\s+/g, "");
+          const feedback = practice.querySelector("#math-practice-feedback");
+          feedback.textContent = entered === expected ? "Correct! Well done. You can now try the lesson quiz." : "Not quite. Review the hint and try again.";
+          feedback.className = entered === expected ? "success" : "error";
+        });
+        practice.querySelector("#show-math-hint").addEventListener("click", () => {
+          practice.querySelector("#math-practice-feedback").textContent = hint;
+          practice.querySelector("#math-practice-feedback").className = "";
+        });
+      } else if (courseLower.includes("computer basics")) {
+        const titleLower = lesson.title.toLowerCase();
+        let task = "Name one safe habit you should follow when using a shared computer.";
+        let guidance = "For example, sign out of your accounts when you finish and do not share your password.";
+        if (titleLower.includes("hardware")) {
+          task = "A learner wants to type a document and print it. Name the input device and output device they need.";
+          guidance = "Think about the device used to enter text and the device that produces a paper copy.";
+        } else if (titleLower.includes("software")) {
+          task = "Give one example of an operating system and explain what it helps a computer do.";
+          guidance = "An operating system manages the computer's hardware and provides a platform for applications.";
+        } else if (titleLower.includes("files")) {
+          task = "You have finished an assignment on a shared computer. Name two steps that help keep your work and account safe.";
+          guidance = "Consider where you save your work, signing out, and protecting personal information.";
+        }
+        const practice = document.createElement("section");
+        practice.className = "practice-workspace resource-card";
+        practice.innerHTML = '<div class="resource-info"><p class="eyebrow">COMPUTER SKILLS PRACTICE</p><h2>Apply what you learned</h2><p class="computer-practice-task"></p><label class="practice-field"><span>Your response</span><textarea id="computer-practice-answer" rows="4" placeholder="Write your answer here..."></textarea></label><div class="practice-controls"><button class="button button-primary" id="review-computer-answer" type="button">Review my response</button><button class="button button-outline" id="computer-practice-hint" type="button">Show learning reminder</button></div><p id="computer-practice-feedback" role="status" aria-live="polite"></p></div>';
+        practice.querySelector(".computer-practice-task").textContent = task;
+        root.insertBefore(practice, root.querySelector(".lesson-quiz") || root.querySelector(".lesson-actions"));
+        practice.querySelector("#review-computer-answer").addEventListener("click", () => {
+          const response = practice.querySelector("#computer-practice-answer").value.trim();
+          const feedback = practice.querySelector("#computer-practice-feedback");
+          feedback.textContent = response.length >= 8 ? "Response saved on this page for you to review. Compare your answer with the learning reminder before taking the quiz." : "Add a little more detail to explain your answer.";
+          feedback.className = response.length >= 8 ? "success" : "error";
+        });
+        practice.querySelector("#computer-practice-hint").addEventListener("click", () => {
+          practice.querySelector("#computer-practice-feedback").textContent = guidance;
+          practice.querySelector("#computer-practice-feedback").className = "";
+        });
+      }
+
       // Load and mark the lesson quiz
       const { data: quizQuestions, error: quizError } = await client
         .from("lesson_quiz_questions")
