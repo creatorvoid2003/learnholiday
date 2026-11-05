@@ -141,7 +141,7 @@ const LearnHoliday = (() => {
           '<p class="eyebrow">' + escapeHTML(course.learning_level || "ALL LEVELS") + '</p>' +
           '<h2>' + escapeHTML(course.title) + '</h2>' +
           '<p>' + escapeHTML(course.description || "Explore this course and build your knowledge.") + '</p>' +
-          '<a class="button button-primary" href="study-centre.html">Explore study resources</a>' +
+          '<a class="button button-primary" href="course.html?id=' + encodeURIComponent(course.id) + '">Open course</a>' +
           '</div></article>';
       }).join("");
 
