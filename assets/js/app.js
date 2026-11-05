@@ -12,6 +12,8 @@ const LearnHoliday = (() => {
   };
 
   let supabaseClient = null;
+  let currentUser = null;
+  let cloudSavedResources = [];
 
   /* STORAGE */
 
@@ -135,135 +137,64 @@ const LearnHoliday = (() => {
     applyFilters();
   }
 
-  /* SAVED RESOURCES */
-
-  function saveResource(id, title) {
-    const resources = readStorage(STORAGE_KEYS.saved);
-
-    if (resources.some(resource => resource.id === id)) {
-      return { success: true, alreadySaved: true };
-    }
-
-    resources.push({
-      id,
-      title,
-      savedAt: new Date().toISOString()
-    });
-
-    return {
-      success: writeStorage(STORAGE_KEYS.saved, resources),
-      alreadySaved: false
-    };
+  /* SUPABASE RESOURCE PROGRESS */
+  async function loadUserProgress() {
+    if (!currentUser) { cloudSavedResources = []; return; }
+    const { data, error } = await getSupabaseClient().from('user_progress')
+      .select('resource_id,is_saved,is_completed').eq('user_id', currentUser.id);
+    if (error) throw error;
+    cloudSavedResources = data || [];
   }
-
-  function removeResource(id) {
-    const resources = readStorage(STORAGE_KEYS.saved)
-      .filter(resource => resource.id !== id);
-
-    writeStorage(STORAGE_KEYS.saved, resources);
-    renderDashboard();
-    updateSaveButtons();
+  async function saveResource(id, title) {
+    if (!currentUser) return { success: false, message: 'Please log in to save resources.' };
+    const client = getSupabaseClient();
+    const existing = cloudSavedResources.find(row => row.resource_id === id);
+    const result = existing
+      ? await client.from('user_progress').update({ is_saved: true, updated_at: new Date().toISOString() }).eq('user_id', currentUser.id).eq('resource_id', id)
+      : await client.from('user_progress').insert({ user_id: currentUser.id, resource_id: id, is_saved: true, is_completed: false });
+    if (result.error) throw result.error;
+    await loadUserProgress(); renderDashboard(); updateSaveButtons();
+    return { success: true, alreadySaved: Boolean(existing && existing.is_saved) };
   }
-
+  async function removeResource(id) {
+    const { error } = await getSupabaseClient().from('user_progress').update({ is_saved: false }).eq('user_id', currentUser.id).eq('resource_id', id);
+    if (error) { window.alert('Could not remove this resource.'); return; }
+    await loadUserProgress(); renderDashboard(); updateSaveButtons();
+  }
   function updateSaveButtons() {
-    const saved = readStorage(STORAGE_KEYS.saved);
-    const savedIds = new Set(saved.map(resource => resource.id));
-
-    document.querySelectorAll(".save-resource").forEach(button => {
-      const isSaved = savedIds.has(button.dataset.resourceId);
-
-      button.textContent = isSaved ? "Saved ✓" : "Save resource";
-      button.setAttribute("aria-pressed", String(isSaved));
+    const ids = new Set(cloudSavedResources.filter(row => row.is_saved).map(row => row.resource_id));
+    document.querySelectorAll('.save-resource').forEach(button => {
+      const saved = ids.has(button.dataset.resourceId);
+      button.textContent = saved ? 'Saved ✓' : 'Save resource';
+      button.setAttribute('aria-pressed', String(saved));
     });
   }
-
-  function setupSaveButtons() {
-    document.querySelectorAll(".save-resource").forEach(button => {
-      button.addEventListener("click", () => {
-        const id = button.dataset.resourceId;
-        const title = button.dataset.resourceTitle;
-
-        if (!id || !title) return;
-
-        const result = saveResource(id, title);
-
-        if (!result.success) {
-          window.alert("Your resource could not be saved.");
-          return;
-        }
-
-        updateSaveButtons();
-
-        window.alert(
-          result.alreadySaved
-            ? "This resource is already saved."
-            : "Resource saved successfully."
-        );
-      });
-    });
-
-    updateSaveButtons();
-  }
-
-  /* DASHBOARD STATISTICS */
-
   function renderDashboard() {
-    const saved = readStorage(STORAGE_KEYS.saved);
-    const completed = readStorage(STORAGE_KEYS.completed);
-
-    const savedCount = document.getElementById("saved-count");
-    const completedCount = document.getElementById("completed-count");
-    const savedContainer = document.getElementById("saved-resources");
-
-    if (savedCount) {
-      savedCount.textContent = String(saved.length);
-    }
-
-    if (completedCount) {
-      completedCount.textContent = String(completed.length);
-    }
-
-    if (!savedContainer) return;
-
-    if (saved.length === 0) {
-      savedContainer.innerHTML = `
-        <article class="resource-card">
-          <div class="resource-info">
-            <h2>No saved resources yet</h2>
-            <p>Visit the Study Centre and save a resource to see it here.</p>
-            <a class="button button-primary" href="study-centre.html">
-              Browse resources
-            </a>
-          </div>
-        </article>
-      `;
-      return;
-    }
-
-    savedContainer.innerHTML = saved.map(resource => `
-      <article class="resource-card">
-        <div class="resource-type">SAVED</div>
-        <div class="resource-info">
-          <h2>${escapeHTML(resource.title || "Saved resource")}</h2>
-          <p>Available in your saved-resource list.</p>
-        </div>
-        <button
-          class="button button-outline remove-resource"
-          type="button"
-          data-resource-id="${escapeHTML(resource.id || "")}">
-          Remove
-        </button>
-      </article>
-    `).join("");
-
-    savedContainer.querySelectorAll(".remove-resource")
-      .forEach(button => {
-        button.addEventListener("click", () => {
-          removeResource(button.dataset.resourceId);
-        });
-      });
+    const saved = cloudSavedResources.filter(row => row.is_saved);
+    const count = document.getElementById('saved-count');
+    const completedCount = document.getElementById('completed-count');
+    const container = document.getElementById('saved-resources');
+    if (count) count.textContent = String(saved.length);
+    if (completedCount) completedCount.textContent = String(cloudSavedResources.filter(row => row.is_completed).length);
+    if (!container) return;
+    if (!saved.length) { container.innerHTML = '<article class="resource-card"><div class="resource-info"><h2>No saved resources yet</h2><p>Visit the Study Centre and save a resource to see it here.</p><a class="button button-primary" href="study-centre.html">Browse resources</a></div></article>'; return; }
+    container.innerHTML = saved.map(row => '<article class="resource-card"><div class="resource-type">SAVED</div><div class="resource-info"><h2>Saved study resource</h2><p>Saved to your LearnHoliday account.</p></div><button class="button button-outline remove-resource" data-resource-id="' + escapeHTML(row.resource_id) + '" type="button">Remove</button></article>').join('');
+    container.querySelectorAll('.remove-resource').forEach(button => button.addEventListener('click', () => removeResource(button.dataset.resourceId)));
   }
-
+  async function loadStudyResources() {
+    const list = document.getElementById('resource-list'); if (!list) return;
+    const client = getSupabaseClient(); if (!client) { list.textContent = 'Database connection unavailable.'; return; }
+    list.textContent = 'Loading published study resources...';
+    try {
+      const { data, error } = await client.from('learning_resources').select('id,title,description,subject,resource_type,content,file_url').eq('published', true).order('created_at', { ascending: false });
+      if (error) throw error;
+      if (!data || !data.length) { list.textContent = 'No published study resources are available yet.'; return; }
+      list.innerHTML = data.map(resource => '<article class="resource-card" data-subject="' + escapeHTML(String(resource.subject || 'other').toLowerCase()) + '"><div class="resource-type">' + escapeHTML(resource.resource_type || 'RESOURCE') + '</div><div class="resource-info"><p class="eyebrow">' + escapeHTML(String(resource.subject || 'GENERAL').toUpperCase()) + '</p><h2>' + escapeHTML(resource.title) + '</h2><p>' + escapeHTML(resource.description || 'Study material') + '</p>' + (resource.content ? '<details><summary>Read resource</summary><p>' + escapeHTML(resource.content).replace(/\n/g, '<br>') + '</p></details>' : '') + (resource.file_url ? '<p><a class="text-link" href="' + escapeHTML(resource.file_url) + '" target="_blank" rel="noopener">Open attached material</a></p>' : '') + '</div><button class="button button-outline save-resource" type="button" data-resource-id="' + escapeHTML(resource.id) + '" data-resource-title="' + escapeHTML(resource.title) + '">Save resource</button></article>').join('');
+      list.querySelectorAll('.save-resource').forEach(button => button.addEventListener('click', async () => {
+        button.disabled = true; try { const result = await saveResource(button.dataset.resourceId, button.dataset.resourceTitle); if (!result.success) { window.alert(result.message); window.location.assign('login.html'); } else window.alert(result.alreadySaved ? 'Already saved.' : 'Resource saved to your account.'); } catch (e) { console.error(e); window.alert('Could not save resource. Please try again.'); } finally { button.disabled = false; }
+      })); updateSaveButtons(); setupResourceFilters();
+    } catch (error) { console.error(error); list.textContent = 'Could not load study resources. Refresh and try again.'; }
+  }
   /* CLASSROOM PREVIEW */
 
   function setupClassroomForm() {
@@ -354,6 +285,10 @@ const LearnHoliday = (() => {
       }
 
       const user = data.user;
+      currentUser = user;
+      await loadUserProgress();
+      renderDashboard();
+      updateSaveButtons();
       const name =
         user.user_metadata?.full_name ||
         user.email ||
@@ -546,19 +481,20 @@ const LearnHoliday = (() => {
     updateYear();
     setupCourseFilters();
     setupResourceFilters();
-    setupSaveButtons();
-    renderDashboard();
+    await loadStudyResources();
     setupClassroomForm();
     setupRegistration();
     setupLogin();
 
     await setupDashboardAuth();
+    if (currentUser) { try { await loadUserProgress(); renderDashboard(); updateSaveButtons(); } catch (error) { console.error(error); } }
   }
 
   return {
     init,
     saveResource,
     removeResource,
+    loadStudyResources,
     renderDashboard,
     getSupabaseClient,
     setupDashboardAuth
