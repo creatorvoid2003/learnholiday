@@ -452,7 +452,7 @@ const LearnHoliday = (() => {
         .eq("published", true).order("lesson_order", { ascending: true });
       if (lessonError) throw lessonError;
       const { data: progress, error: progressError } = await client
-        .from("lesson_progress").select("lesson_id,is_completed")
+        .from("lesson_progress").select("lesson_id,is_completed,completed_at,updated_at")
         .eq("user_id", currentUser.id);
       if (progressError) throw progressError;
 
@@ -476,6 +476,49 @@ const LearnHoliday = (() => {
           : (courseLessons.length ? '<span class="progress-finished">All lessons completed ✓</span>' : '<span class="small-note">Lessons coming soon</span>');
         return '<article class="course-progress-card"><div class="course-progress-top"><div><p class="eyebrow">' + escapeHTML(course.subject || "COURSE") + '</p><h3>' + escapeHTML(course.title) + '</h3></div><strong>' + percent + '%</strong></div><div class="progress-track" role="progressbar" aria-label="' + escapeHTML(course.title) + ' progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + percent + '"><span style="width:' + percent + '%"></span></div><p class="progress-caption">' + done + ' of ' + courseLessons.length + ' lessons completed</p><div class="course-progress-action">' + action + '</div></article>';
       }).join("");
+
+      const completedLessons = (progress || []).filter(row => row.is_completed).map(row => {
+        const lesson = allLessons.find(item => item.id === row.lesson_id);
+        return lesson ? Object.assign({}, lesson, { completedAt: row.completed_at || row.updated_at }) : null;
+      }).filter(Boolean).sort((a,b) => new Date(b.completedAt) - new Date(a.completedAt));
+      const milestones = [
+        {title:"First step",detail:"Complete your first lesson",reached:completedTotal>=1,icon:"★"},
+        {title:"Getting started",detail:"Complete 5 lessons",reached:completedTotal>=5,icon:"◆"},
+        {title:"Knowledge builder",detail:"Complete 10 lessons",reached:completedTotal>=10,icon:"✦"},
+        {title:"Course finisher",detail:"Complete an entire course",reached:courses.some(course=>{const list=allLessons.filter(item=>item.course_id===course.id);return list.length>0&&list.every(item=>completedIds.has(item.id));}),icon:"🏆"},
+        {title:"All-round learner",detail:"Complete lessons in 3 courses",reached:new Set(completedLessons.map(item=>item.course_id)).size>=3,icon:"✧"}
+      ];
+      const achievementNode=document.getElementById("achievement-list");
+      if(achievementNode) achievementNode.innerHTML=milestones.map(item=>'<article class="achievement-card '+(item.reached?'is-earned':'is-locked')+'"><span class="achievement-icon">'+item.icon+'</span><div><h3>'+item.title+'</h3><p>'+item.detail+'</p><strong>'+(item.reached?'Earned ✓':'Not yet earned')+'</strong></div></article>').join("");
+      const dayKey=date=>date.getFullYear()+"-"+date.getMonth()+"-"+date.getDate();
+      const activeDays=new Set(completedLessons.map(item=>dayKey(new Date(item.completedAt))));
+      const cursor=new Date();cursor.setHours(0,0,0,0);
+      if(!activeDays.has(dayKey(cursor)))cursor.setDate(cursor.getDate()-1);
+      let streak=0;while(activeDays.has(dayKey(cursor))){streak++;cursor.setDate(cursor.getDate()-1);}
+      const streakNode=document.getElementById("learning-streak"),historyNode=document.getElementById("history-count");
+      if(streakNode)streakNode.textContent=streak+(streak===1?" day":" days");
+      if(historyNode)historyNode.textContent=String(completedLessons.length);
+      const activity=document.getElementById("recent-learning-activity");
+      if(activity)activity.innerHTML=completedLessons.length?completedLessons.slice(0,8).map(item=>'<article class="activity-item"><div><h3>'+escapeHTML(item.title)+'</h3><p>'+escapeHTML((courses.find(course=>course.id===item.course_id)||{}).title||"Course")+'</p></div><time>'+new Date(item.completedAt).toLocaleDateString()+'</time></article>').join(""):'<p class="small-note">Complete a lesson to start building your learning history.</p>';
+      const goalInput=document.getElementById("weekly-goal"),goalStatus=document.getElementById("weekly-goal-status"),goalBar=document.getElementById("weekly-goal-bar"),goalText=document.getElementById("weekly-goal-progress");
+      const goalResult=await client.from("learner_learning_goals").select("weekly_lesson_target").eq("user_id",currentUser.id).maybeSingle();
+      if(goalResult.error)throw goalResult.error;
+      const target=goalResult.data?goalResult.data.weekly_lesson_target:3;
+      if(goalInput)goalInput.value=String(target);
+      const weekStart=new Date();weekStart.setHours(0,0,0,0);weekStart.setDate(weekStart.getDate()-((weekStart.getDay()+6)%7));
+      const weekCount=completedLessons.filter(item=>item.completedAt&&new Date(item.completedAt)>=weekStart).length;
+      if(goalBar)goalBar.style.width=Math.min(100,Math.round(weekCount/target*100))+"%";
+      if(goalText)goalText.textContent=weekCount+" of "+target+" lessons completed this week";
+      const save=document.getElementById("save-weekly-goal");
+      if(save&&!save.dataset.bound){save.dataset.bound="true";save.addEventListener("click",async()=>{
+        const value=Number(goalInput&&goalInput.value);
+        if(!Number.isInteger(value)||value<1||value>30){if(goalStatus)goalStatus.textContent="Choose a whole number from 1 to 30.";return;}
+        save.disabled=true;
+        const result=await client.from("learner_learning_goals").upsert({user_id:currentUser.id,weekly_lesson_target:value,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+        save.disabled=false;
+        if(goalStatus)goalStatus.textContent=result.error?"Could not save your goal. Please try again.":"Your weekly goal has been saved.";
+        if(!result.error){if(goalText)goalText.textContent=weekCount+" of "+value+" lessons completed this week";if(goalBar)goalBar.style.width=Math.min(100,Math.round(weekCount/value*100))+"%";}
+      });}
     } catch (error) {
       console.error("Learning overview error:", error);
       container.textContent = "We could not load your course progress. Please refresh and try again.";
