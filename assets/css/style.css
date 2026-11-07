@@ -386,3 +386,22 @@ body.auth-page { display: flex; flex-direction: column; align-items: stretch; ju
 .course-progress-action .button { max-width:100%; white-space:normal; text-align:left; }
 .progress-finished { color:var(--success); font-weight:800; }
 @media(max-width:650px) { .progress-overview,.course-progress-list { grid-template-columns:1fr; } }
+
+/* Learner achievements and activity */
+.achievement-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.achievement-card,.goal-panel,.activity-item{background:var(--surface,#fff);border:1px solid var(--border,#e5e7eb);border-radius:16px;padding:18px}
+.achievement-card{display:flex;gap:14px;align-items:flex-start}
+.achievement-card.is-earned{border-color:#8b78e6;background:rgba(124,103,220,.07)}
+.achievement-card.is-locked{opacity:.72}
+.achievement-icon{display:grid;place-items:center;min-width:42px;height:42px;border-radius:12px;background:rgba(124,103,220,.13);font-size:21px}
+.achievement-card h3,.activity-item h3{margin:0 0 5px}
+.achievement-card p,.activity-item p{margin:0 0 8px;color:var(--muted,#667085)}
+.achievement-card strong{font-size:.82rem;color:var(--primary,#6954c8)}
+.insight-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:18px}
+.goal-panel{max-width:620px}
+.goal-controls{display:flex;gap:12px;align-items:center;margin:12px 0}
+.goal-controls input{width:110px;padding:12px;border:1px solid var(--border,#d8dce5);border-radius:10px;font:inherit}
+.activity-list{display:grid;gap:10px}
+.activity-item{display:flex;justify-content:space-between;gap:16px;align-items:center}
+.activity-item time{font-size:.85rem;color:var(--muted,#667085);white-space:nowrap}
+@media(max-width:560px){.activity-item{align-items:flex-start;flex-direction:column}.goal-controls{align-items:stretch;flex-wrap:wrap}}
