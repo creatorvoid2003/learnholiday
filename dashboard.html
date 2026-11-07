@@ -47,7 +47,16 @@
       <div id="course-progress-list" class="course-progress-list" aria-live="polite"><p class="small-note">Your course progress will appear here.</p></div>
     </section>
 
-    <section class="section">
+    
+<section class="section learner-insights">
+<div class="section-heading"><div><p class="eyebrow">YOUR ACHIEVEMENTS</p><h2>Learning milestones</h2><p>Celebrate your progress as you learn.</p></div></div>
+<div id="achievement-list" class="achievement-grid"><p class="small-note">Loading achievements...</p></div>
+<div class="insight-grid"><article class="stat-card"><span class="stat-label">Current learning streak</span><strong id="learning-streak">0 days</strong><p>Consecutive days with a completed lesson</p></article><article class="stat-card"><span class="stat-label">Completed lesson history</span><strong id="history-count">0</strong><p>Lessons completed in your account</p></article></div>
+</section>
+<section class="section"><div class="section-heading"><div><p class="eyebrow">YOUR PERSONAL TARGET</p><h2>Weekly learning goal</h2><p>Choose a realistic number of lessons to complete each week.</p></div></div>
+<div class="goal-panel"><label for="weekly-goal">Lessons per week</label><div class="goal-controls"><input id="weekly-goal" type="number" min="1" max="30" value="3"><button id="save-weekly-goal" class="button button-primary" type="button">Save goal</button></div><p id="weekly-goal-status" class="small-note" role="status">Your goal is private to your account.</p><div class="progress-track"><span id="weekly-goal-bar" style="width:0%"></span></div><p id="weekly-goal-progress" class="progress-caption">0 lessons completed this week</p></div></section>
+<section class="section"><div class="section-heading"><div><p class="eyebrow">RECENT ACTIVITY</p><h2>Your learning history</h2><p>Your latest completed lessons appear here.</p></div></div><div id="recent-learning-activity" class="activity-list"><p class="small-note">Loading recent activity...</p></div></section>
+<section class="section">
       <div class="section-heading">
         <div>
           <p class="eyebrow">YOUR COLLECTION</p>
@@ -101,7 +110,6 @@
       </div>
     </section>
 
-  </main>
   </main>
 
   <footer class="site-footer">
