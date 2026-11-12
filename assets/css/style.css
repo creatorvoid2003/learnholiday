@@ -507,3 +507,30 @@ body.auth-page { display: flex; flex-direction: column; align-items: stretch; ju
 @media (max-width: 560px) {
   .theme-toggle { flex: 0 0 auto; }
 }
+
+
+/* Virtual classroom management */
+.classroom-panel { margin: 34px 0 55px; }
+.class-create-form { max-width: 680px; display: grid; gap: 10px; padding: 25px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.class-create-form label { margin-top: 7px; color: var(--navy); font-weight: 800; }
+.class-create-form input,.class-create-form textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; color: var(--text); background: var(--surface); font: inherit; }
+.class-create-form input:focus,.class-create-form textarea:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+.class-list-heading { margin-top: 36px; }
+.class-management-list { display: grid; gap: 14px; }
+.class-management-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.class-management-card h3 { margin: 8px 0 5px; color: var(--navy); font: 800 1.15rem Manrope,sans-serif; }
+.class-management-card p { color: var(--muted); font-size: .92rem; }
+.class-capacity { margin-top: 9px; font-weight: 700; }
+.class-code-box { min-width: 150px; padding: 13px 17px; border: 1px dashed var(--primary); border-radius: 12px; text-align: center; background: var(--primary-soft); }
+.class-code-box span,.class-code-box strong { display: block; }
+.class-code-box span { color: var(--muted); font-size: .65rem; font-weight: 800; letter-spacing: 1px; }
+.class-code-box strong { margin-top: 4px; color: var(--primary); font: 800 1.4rem Manrope,sans-serif; letter-spacing: 2px; }
+.badge-live { padding: 7px 12px; border-radius: 20px; color: var(--success); background: rgba(22,134,91,.1); font-size: .72rem; font-weight: 800; white-space: nowrap; }
+:root[data-theme="dark"] .class-create-form { background: var(--surface); border-color: var(--border); }
+:root[data-theme="dark"] .class-create-form label { color: var(--navy); }
+:root[data-theme="dark"] .class-create-form input,:root[data-theme="dark"] .class-create-form textarea { color: var(--text); background: #141827; border-color: var(--border); }
+@media(max-width:650px) {
+  .class-management-card { align-items: stretch; flex-direction: column; }
+  .class-code-box { width: 100%; }
+  .class-create-form { padding: 18px; }
+}
