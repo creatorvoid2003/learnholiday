@@ -1057,9 +1057,51 @@ const LearnHoliday = (() => {
     }
   }
 
+
+  /* THEME: persistent light/dark appearance */
+  function setupThemeToggle() {
+    const root = document.documentElement;
+    let theme = "light";
+    try {
+      const saved = localStorage.getItem("learnholiday-theme");
+      if (saved === "dark" || saved === "light") theme = saved;
+    } catch (error) {
+      console.warn("Theme preference could not be read:", error);
+    }
+
+    function applyTheme(nextTheme) {
+      theme = nextTheme === "dark" ? "dark" : "light";
+      root.dataset.theme = theme;
+      document.body.dataset.theme = theme;
+      const button = document.getElementById("theme-toggle");
+      if (button) {
+        button.textContent = theme === "dark" ? "☀ Light mode" : "☾ Dark mode";
+        button.setAttribute("aria-pressed", String(theme === "dark"));
+        button.setAttribute("aria-label", theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+      }
+      try {
+        localStorage.setItem("learnholiday-theme", theme);
+      } catch (error) {
+        console.warn("Theme preference could not be saved:", error);
+      }
+    }
+
+    const headerActions = document.querySelector(".site-header .header-actions");
+    if (headerActions && !document.getElementById("theme-toggle")) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.id = "theme-toggle";
+      button.className = "button button-outline theme-toggle";
+      button.addEventListener("click", () => applyTheme(theme === "dark" ? "light" : "dark"));
+      headerActions.insertBefore(button, headerActions.firstChild);
+    }
+    applyTheme(theme);
+  }
+
   /* STARTUP */
 
   async function init() {
+    setupThemeToggle();
     updateYear();
     await setupCoursePage();
     await setupLessonPage();
