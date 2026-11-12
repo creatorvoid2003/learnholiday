@@ -255,29 +255,194 @@ const LearnHoliday = (() => {
       })); updateSaveButtons(); setupResourceFilters();
     } catch (error) { console.error(error); list.textContent = 'Could not load study resources. Refresh and try again.'; }
   }
-  /* CLASSROOM PREVIEW */
+  /* VIRTUAL CLASSROOM: TEACHER CLASSES AND LEARNER JOINING */
 
-  function setupClassroomForm() {
-    const form = document.getElementById("classroom-form");
-    const codeInput = document.getElementById("class-code");
-    const message = document.getElementById("classroom-message");
+  async function setupClassroomForm() {
+    const page = document.getElementById("classroom-portal");
+    if (!page) return;
 
-    if (!form || !codeInput || !message) return;
+    const client = getSupabaseClient();
+    const teacherPanel = document.getElementById("classroom-teacher-panel");
+    const learnerPanel = document.getElementById("classroom-student-panel");
+    const status = document.getElementById("classroom-account-status");
 
-    form.addEventListener("submit", event => {
-      event.preventDefault();
+    if (!client) {
+      if (status) status.textContent = "Classroom service is unavailable. Please refresh later.";
+      return;
+    }
 
-      if (!codeInput.value.trim()) {
-        setMessage(message, "Enter a class code first.", "error");
+    try {
+      const { data: authData, error: authError } = await client.auth.getUser();
+      if (authError) throw authError;
+      currentUser = authData.user || null;
+
+      if (!currentUser) {
+        if (status) status.innerHTML = 'Please <a href="login.html">log in</a> to create or join a class.';
         return;
       }
 
-      setMessage(
-        message,
-        "Class joining is not available yet. A classroom service must be connected.",
-        "error"
-      );
+      const { data: profile, error: profileError } = await client
+        .from("profiles").select("role,full_name").eq("id", currentUser.id).single();
+      if (profileError) throw profileError;
+
+      if (status) status.textContent = profile.role === "teacher"
+        ? "Teacher workspace: create classes and share their joining codes with learners."
+        : "Learner workspace: enter a class code from your teacher to join.";
+
+      if (profile.role === "teacher") {
+        if (teacherPanel) teacherPanel.hidden = false;
+        await loadTeacherClasses(client);
+        setupTeacherClassForm(client);
+      } else if (profile.role === "student") {
+        if (learnerPanel) learnerPanel.hidden = false;
+        await loadLearnerClasses(client);
+        setupLearnerJoinForm(client);
+      } else if (status) {
+        status.textContent = "Your account does not have a classroom role yet. Contact the LearnHoliday administrator.";
+      }
+    } catch (error) {
+      console.error("Classroom setup error:", error);
+      if (status) status.textContent = "Could not load your classroom. Please refresh and try again.";
+    }
+  }
+
+  function setupTeacherClassForm(client) {
+    const form = document.getElementById("teacher-class-form");
+    const message = document.getElementById("teacher-class-message");
+    if (!form || form.dataset.bound === "true") return;
+    form.dataset.bound = "true";
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const submit = form.querySelector('button[type="submit"]');
+      const title = document.getElementById("new-class-title")?.value.trim() || "";
+      const subject = document.getElementById("new-class-subject")?.value.trim() || "";
+      const description = document.getElementById("new-class-description")?.value.trim() || "";
+
+      if (title.length < 3 || subject.length < 2) {
+        setMessage(message, "Enter a class name and subject.", "error");
+        return;
+      }
+
+      submit.disabled = true;
+      setMessage(message, "Creating your class...", "");
+      try {
+        const { error } = await client.from("learning_classes").insert({
+          teacher_id: currentUser.id, title, subject, description
+        });
+        if (error) throw error;
+        form.reset();
+        setMessage(message, "Class created. Your private joining code is shown below.", "success");
+        await loadTeacherClasses(client);
+      } catch (error) {
+        console.error("Create class error:", error);
+        setMessage(message, error.message || "Could not create the class. Check your teacher access and try again.", "error");
+      } finally {
+        submit.disabled = false;
+      }
     });
+  }
+
+  async function loadTeacherClasses(client) {
+    const list = document.getElementById("teacher-class-list");
+    if (!list) return;
+    list.textContent = "Loading your classes...";
+    try {
+      const { data: classes, error } = await client.from("learning_classes")
+        .select("id,title,subject,description,status,created_at,max_learners")
+        .eq("teacher_id", currentUser.id).order("created_at", { ascending: false });
+      if (error) throw error;
+      if (!classes || !classes.length) {
+        list.innerHTML = '<p class="small-note">You have not created any classes yet.</p>';
+        return;
+      }
+      const ids = classes.map(item => item.id);
+      const [{ data: invites, error: inviteError }, { data: members, error: memberError }] = await Promise.all([
+        client.from("learning_class_invites").select("class_id,join_code,is_active").in("class_id", ids),
+        client.from("learning_class_memberships").select("class_id,learner_id").in("class_id", ids).eq("status", "active")
+      ]);
+      if (inviteError) throw inviteError;
+      if (memberError) throw memberError;
+      const inviteMap = new Map((invites || []).map(item => [item.class_id, item]));
+      const countMap = new Map();
+      (members || []).forEach(item => countMap.set(item.class_id, (countMap.get(item.class_id) || 0) + 1));
+
+      list.innerHTML = classes.map(item => {
+        const invite = inviteMap.get(item.id);
+        const count = countMap.get(item.id) || 0;
+        return '<article class="class-management-card"><div><span class="resource-type">' +
+          escapeHTML(item.subject) + '</span><h3>' + escapeHTML(item.title) + '</h3><p>' +
+          escapeHTML(item.description || "No class description added.") +
+          '</p><p class="class-capacity">' + count + ' / 50 learners · ' +
+          escapeHTML(item.status) + '</p></div><div class="class-code-box"><span>LEARNER JOIN CODE</span><strong>' +
+          escapeHTML(invite?.join_code || "Unavailable") + '</strong></div></article>';
+      }).join("");
+    } catch (error) {
+      console.error("Load teacher classes error:", error);
+      list.textContent = "Could not load your classes. Please refresh.";
+    }
+  }
+
+  function setupLearnerJoinForm(client) {
+    const form = document.getElementById("classroom-form");
+    const codeInput = document.getElementById("class-code");
+    const message = document.getElementById("classroom-message");
+    if (!form || !codeInput || !message || form.dataset.bound === "true") return;
+    form.dataset.bound = "true";
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const code = codeInput.value.trim().toUpperCase();
+      if (!code) {
+        setMessage(message, "Enter the class code your teacher gave you.", "error");
+        return;
+      }
+      const submit = form.querySelector('button[type="submit"]');
+      submit.disabled = true;
+      setMessage(message, "Checking your class code...", "");
+      try {
+        const { error } = await client.rpc("join_learning_class", { p_join_code: code });
+        if (error) throw error;
+        codeInput.value = "";
+        setMessage(message, "You have joined the class successfully.", "success");
+        await loadLearnerClasses(client);
+      } catch (error) {
+        console.error("Join class error:", error);
+        setMessage(message, error.message || "Could not join this class. Check the code and try again.", "error");
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  }
+
+  async function loadLearnerClasses(client) {
+    const list = document.getElementById("learner-class-list");
+    if (!list) return;
+    list.textContent = "Loading your classes...";
+    try {
+      const { data: memberships, error: membershipError } = await client.from("learning_class_memberships")
+        .select("class_id,joined_at").eq("learner_id", currentUser.id).eq("status", "active")
+        .order("joined_at", { ascending: false });
+      if (membershipError) throw membershipError;
+      if (!memberships || !memberships.length) {
+        list.innerHTML = '<p class="small-note">You have not joined a class yet. Enter a joining code above.</p>';
+        return;
+      }
+      const ids = memberships.map(item => item.class_id);
+      const { data: classes, error } = await client.from("learning_classes")
+        .select("id,title,subject,description,status").in("id", ids);
+      if (error) throw error;
+      list.innerHTML = (classes || []).map(item =>
+        '<article class="class-management-card"><div><span class="resource-type">' +
+        escapeHTML(item.subject) + '</span><h3>' + escapeHTML(item.title) + '</h3><p>' +
+        escapeHTML(item.description || "Your teacher has not added a description.") +
+        '</p><p class="class-capacity">Class status: ' + escapeHTML(item.status) +
+        '</p></div><span class="badge-live">ENROLLED</span></article>'
+      ).join("") || '<p class="small-note">Your classes will appear here.</p>';
+    } catch (error) {
+      console.error("Load learner classes error:", error);
+      list.textContent = "Could not load your classes. Please refresh.";
+    }
   }
 
   /* SUPABASE CLIENT */
@@ -1109,6 +1274,7 @@ const LearnHoliday = (() => {
     setupResourceFilters();
     await loadCourses();
     await setupNavigationAuth();
+    setupThemeToggle();
     await setupResourceAuth();
     await loadStudyResources();
     setupClassroomForm();
