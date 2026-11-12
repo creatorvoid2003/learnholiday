@@ -1,9 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Create, manage and join LearnHoliday virtual classes.">
   <title>Virtual Classroom | LearnHoliday</title>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -23,67 +23,72 @@
     </div>
   </header>
 
-  <main class="page-main">
+  <main class="page-main" id="classroom-portal">
     <section class="page-heading">
       <p class="eyebrow">LEARN TOGETHER</p>
       <h1>Virtual Classroom</h1>
-      <p>A space for online lessons, teacher guidance and collaborative learning.</p>
+      <p>Join your teacher's class or manage the classes you teach.</p>
+      <p id="classroom-account-status" class="small-note" role="status">Checking your account...</p>
     </section>
 
-    <section class="section classroom-layout">
-      <div class="classroom-main">
-        <div class="classroom-screen">
-          <div class="screen-indicator">
-            <span class="status-dot"></span>
-            CLASSROOM PREVIEW
-          </div>
-          <div class="screen-content">
-            <div class="learning-symbol">LH</div>
-            <h2>Your online classroom</h2>
-            <p>Live lessons will appear here once a classroom service is connected.</p>
-          </div>
-        </div>
+    <section id="classroom-teacher-panel" class="classroom-panel" hidden>
+      <div class="section-heading"><div>
+        <p class="eyebrow">TEACHER WORKSPACE</p>
+        <h2>Create a class</h2>
+        <p>Each class has its own learner list and private joining code. Each class supports up to 50 learners.</p>
+      </div></div>
+      <form id="teacher-class-form" class="class-create-form">
+        <label for="new-class-title">Class name</label>
+        <input id="new-class-title" type="text" maxlength="100" placeholder="e.g. Senior Two Mathematics" required>
+        <label for="new-class-subject">Subject</label>
+        <input id="new-class-subject" type="text" maxlength="60" placeholder="e.g. Mathematics" required>
+        <label for="new-class-description">Description (optional)</label>
+        <textarea id="new-class-description" maxlength="1000" rows="3" placeholder="What will learners study in this class?"></textarea>
+        <button class="button button-primary" type="submit">Create class</button>
+        <p id="teacher-class-message" class="small-note" role="status"></p>
+      </form>
+      <div class="section-heading class-list-heading"><div><p class="eyebrow">YOUR CLASSES</p><h2>Class management</h2></div></div>
+      <div id="teacher-class-list" class="class-management-list"><p class="small-note">Your classes will appear here.</p></div>
+    </section>
 
-        <div class="feature-grid classroom-features">
-          <article class="feature-card">
-            <h3>Live lessons</h3>
-            <p>Planned teacher-led video lessons and discussions.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Class resources</h3>
-            <p>Planned sharing of lesson materials and revision notes.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Questions and answers</h3>
-            <p>Planned space for learners to ask questions and get guidance.</p>
-          </article>
+    <section id="classroom-student-panel" class="classroom-panel" hidden>
+      <div class="classroom-layout">
+        <div class="classroom-main">
+          <div class="classroom-screen">
+            <div class="screen-indicator"><span class="status-dot"></span> CLASSROOM SPACE</div>
+            <div class="screen-content">
+              <div class="learning-symbol">LH</div>
+              <h2>Your learning classroom</h2>
+              <p>Your enrolled classes will appear below. Live lessons and class activities will be added in the next stage.</p>
+            </div>
+          </div>
+          <div class="section-heading class-list-heading"><div><p class="eyebrow">YOUR CLASSES</p><h2>Enrolled classes</h2></div></div>
+          <div id="learner-class-list" class="class-management-list"><p class="small-note">Your classes will appear here.</p></div>
         </div>
+        <aside class="classroom-sidebar">
+          <h2>Join a class</h2>
+          <p>Enter the private joining code provided by your teacher.</p>
+          <form id="classroom-form">
+            <label for="class-code">Class code</label>
+            <input id="class-code" name="classCode" type="text" maxlength="8" placeholder="8-character code" autocomplete="off" required>
+            <button class="button button-primary" type="submit">Join class</button>
+            <p id="classroom-message" class="small-note" aria-live="polite"></p>
+          </form>
+          <p class="small-note">Only share your class code with learners who should be in your class.</p>
+        </aside>
       </div>
+    </section>
 
-      <aside class="classroom-sidebar">
-        <h2>Join a class</h2>
-        <p>When classroom sessions are implemented, your teacher will provide the joining details.</p>
-        <form id="classroom-form">
-          <label for="class-code">Class code</label>
-          <input
-            id="class-code"
-            name="classCode"
-            type="text"
-            placeholder="Enter class code"
-            autocomplete="off"
-          >
-          <button class="button button-primary" type="submit">Check code</button>
-          <p id="classroom-message" class="small-note" aria-live="polite"></p>
-        </form>
-        <p class="small-note">
-          Joining is not active yet. Do not enter passwords or private information here.
-        </p>
-      </aside>
+    <section class="feature-grid classroom-features">
+      <article class="feature-card"><h3>Separate classes</h3><p>Each class has its own enrolment and class space.</p></article>
+      <article class="feature-card"><h3>50-learner limit</h3><p>The database enforces a maximum of 50 active learners in each class.</p></article>
+      <article class="feature-card"><h3>Private joining codes</h3><p>Joining codes are visible only to the teacher who owns each class.</p></article>
     </section>
   </main>
 
   <footer class="site-footer">
     <a class="brand" href="index.html">Learn<span>Holiday</span></a>
+    <p>Learning continues beyond the classroom.</p>
     <p>© <span id="current-year">2026</span> LearnHoliday</p>
   </footer>
 
