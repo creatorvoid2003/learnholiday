@@ -405,3 +405,105 @@ body.auth-page { display: flex; flex-direction: column; align-items: stretch; ju
 .activity-item{display:flex;justify-content:space-between;gap:16px;align-items:center}
 .activity-item time{font-size:.85rem;color:var(--muted,#667085);white-space:nowrap}
 @media(max-width:560px){.activity-item{align-items:flex-start;flex-direction:column}.goal-controls{align-items:stretch;flex-wrap:wrap}}
+
+
+/* LearnHoliday dark theme */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --primary: #a99bff;
+  --primary-dark: #c0b6ff;
+  --primary-soft: #302b50;
+  --navy: #f1efff;
+  --text: #e6e7f2;
+  --muted: #a7abc2;
+  --background: #10121d;
+  --surface: #191c2b;
+  --border: #303448;
+  --success: #58d6a2;
+  --shadow: 0 12px 36px rgba(0,0,0,.24);
+  --shadow-hover: 0 20px 48px rgba(0,0,0,.36);
+}
+:root[data-theme="dark"] body { background: var(--background); color: var(--text); }
+:root[data-theme="dark"] .site-header {
+  background: rgba(20,22,35,.94);
+  border-bottom-color: var(--border);
+}
+:root[data-theme="dark"] .brand,
+:root[data-theme="dark"] .page-heading h1,
+:root[data-theme="dark"] .hero-content h1,
+:root[data-theme="dark"] .section-heading h2,
+:root[data-theme="dark"] .feature-card h3,
+:root[data-theme="dark"] .course-card h2,
+:root[data-theme="dark"] .course-card h3,
+:root[data-theme="dark"] .resource-card h3,
+:root[data-theme="dark"] .stat-card strong,
+:root[data-theme="dark"] .auth-card h1,
+:root[data-theme="dark"] .auth-card label,
+:root[data-theme="dark"] .classroom-sidebar h2,
+:root[data-theme="dark"] .lesson-section h2,
+:root[data-theme="dark"] .quiz-question legend,
+:root[data-theme="dark"] .practice-workspace h2,
+:root[data-theme="dark"] .practice-workspace h3 { color: var(--navy); }
+:root[data-theme="dark"] .main-nav a { color: #b9bdd2; }
+:root[data-theme="dark"] .main-nav a:hover,
+:root[data-theme="dark"] .main-nav a.active { color: var(--primary); }
+:root[data-theme="dark"] .button-outline {
+  color: var(--text);
+  background: #202438;
+  border-color: var(--border);
+}
+:root[data-theme="dark"] .button-outline:hover { background: #292e45; border-color: var(--primary); }
+:root[data-theme="dark"] .feature-card,
+:root[data-theme="dark"] .course-card,
+:root[data-theme="dark"] .resource-card,
+:root[data-theme="dark"] .stat-card,
+:root[data-theme="dark"] .auth-card,
+:root[data-theme="dark"] .classroom-sidebar,
+:root[data-theme="dark"] .course-progress-card,
+:root[data-theme="dark"] .achievement-card,
+:root[data-theme="dark"] .goal-panel,
+:root[data-theme="dark"] .activity-item {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: 0 5px 22px rgba(0,0,0,.16);
+}
+:root[data-theme="dark"] .filter-bar input,
+:root[data-theme="dark"] .filter-bar select,
+:root[data-theme="dark"] .filter-bar button,
+:root[data-theme="dark"] .auth-card input,
+:root[data-theme="dark"] .auth-card select,
+:root[data-theme="dark"] .auth-card textarea,
+:root[data-theme="dark"] .classroom-sidebar input,
+:root[data-theme="dark"] .goal-controls input,
+:root[data-theme="dark"] .practice-field input {
+  color: var(--text);
+  background: #141827;
+  border-color: var(--border);
+}
+:root[data-theme="dark"] .filter-bar input::placeholder,
+:root[data-theme="dark"] .auth-card input::placeholder { color: #858ba5; }
+:root[data-theme="dark"] .hero-panel {
+  border-color: #3a365d;
+  background: radial-gradient(circle at 85% 12%, rgba(169,155,255,.13), transparent 28%), linear-gradient(145deg,#252542 0%,#1c2a3e 100%);
+}
+:root[data-theme="dark"] .panel-top { color: #b8b6d8; }
+:root[data-theme="dark"] .hero-panel h2,
+:root[data-theme="dark"] .mini-stat-grid strong { color: #f1efff; }
+:root[data-theme="dark"] .mini-stat-grid > div { background: rgba(15,18,32,.48); border-color: rgba(255,255,255,.08); }
+:root[data-theme="dark"] .callout {
+  border-color: #3b365f;
+  background: linear-gradient(110deg,#252341,#1c2a3e);
+}
+:root[data-theme="dark"] .auth-page { background: linear-gradient(145deg,#141527,#111b2b 55%,#111b24); }
+:root[data-theme="dark"] .quiz-question { border-color: var(--border); background: #151827; }
+:root[data-theme="dark"] .progress-track { background: #303448; }
+:root[data-theme="dark"] .achievement-card.is-earned { background: rgba(124,103,220,.16); }
+:root[data-theme="dark"] .achievement-card.is-locked { opacity: .82; }
+:root[data-theme="dark"] .course-progress-top h3,
+:root[data-theme="dark"] .practice-field { color: var(--text); }
+:root[data-theme="dark"] .lesson-section { border-bottom-color: var(--border); }
+:root[data-theme="dark"] .site-footer { background: #090b13; }
+.theme-toggle { white-space: nowrap; }
+@media (max-width: 560px) {
+  .theme-toggle { flex: 0 0 auto; }
+}
