@@ -780,6 +780,72 @@ const LearnHoliday = (() => {
     });
   }
 
+  /* PASSWORD RECOVERY */
+  function setupPasswordRecovery() {
+    const requestForm = document.getElementById("password-reset-form");
+    const updateForm = document.getElementById("new-password-form");
+    const message = document.getElementById("password-reset-message");
+    const client = getSupabaseClient();
+
+    if (!client) {
+      if (message) setMessage(message, "Password recovery is temporarily unavailable. Please refresh and try again.", "error");
+      return;
+    }
+
+    if (requestForm && message) {
+      requestForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        const email = document.getElementById("reset-email")?.value.trim();
+        const button = requestForm.querySelector('button[type="submit"]');
+        if (button) button.disabled = true;
+        setMessage(message, "Sending password reset email...");
+        try {
+          const redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, "reset-password.html");
+          const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo });
+          if (error) throw error;
+          setMessage(message, "If an account exists for that email, a password reset link has been sent. Check your inbox and spam folder.", "success");
+          requestForm.reset();
+        } catch (error) {
+          console.error("Password reset request error:", error);
+          setMessage(message, error.message || "Could not send the reset email. Please try again.", "error");
+        } finally {
+          if (button) button.disabled = false;
+        }
+      });
+    }
+
+    if (updateForm && message) {
+      updateForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        const password = document.getElementById("new-password")?.value || "";
+        const confirm = document.getElementById("confirm-new-password")?.value || "";
+        if (password.length < 8) {
+          setMessage(message, "Your new password must contain at least 8 characters.", "error");
+          return;
+        }
+        if (password !== confirm) {
+          setMessage(message, "The passwords do not match.", "error");
+          return;
+        }
+        const button = updateForm.querySelector('button[type="submit"]');
+        if (button) button.disabled = true;
+        setMessage(message, "Updating your password...");
+        try {
+          const { error } = await client.auth.updateUser({ password });
+          if (error) throw error;
+          setMessage(message, "Your password has been updated. You can now log in with your new password.", "success");
+          updateForm.reset();
+          window.setTimeout(() => window.location.assign("login.html"), 1800);
+        } catch (error) {
+          console.error("Password update error:", error);
+          setMessage(message, error.message || "Could not update your password. Open the latest reset email and try again.", "error");
+        } finally {
+          if (button) button.disabled = false;
+        }
+      });
+    }
+  }
+
   /* LOGIN */
 
   function setupLogin() {
@@ -1280,6 +1346,7 @@ const LearnHoliday = (() => {
     setupClassroomForm();
     setupRegistration();
     setupLogin();
+    setupPasswordRecovery();
 
     await setupDashboardAuth();
     if (currentUser) { try { await loadUserProgress(); renderDashboard(); updateSaveButtons(); } catch (error) { console.error(error); } }
