@@ -22,14 +22,15 @@ Open `http://localhost:3000`. The server health check is `/health`.
 - `assets/js/supabase-config.js`: public Supabase project URL and publishable key.
 - `assets/js/app.js`: shared browser behaviour for authentication, learning, quizzes, progress, classroom and theme.
 - `server.js`: small static-file server and health endpoint.
-- `supabase-schem.sql`: base database schema.
+- `supabase/bootstrap.sql`: core Supabase bootstrap reference.
+- `supabase/README.md`: database structure, migration status and safety notes.
 
 ## Supabase setup
 
 1. Keep the project URL and publishable key in `assets/js/supabase-config.js`. Never put a service-role or secret key in browser code.
 2. The Supabase JavaScript library is loaded from jsDelivr by the HTML pages.
 3. Configure the allowed authentication redirect URLs in Supabase for the deployed website and local development address.
-4. The base SQL file creates profiles, courses, resources and resource progress. Lesson quizzes, lesson progress, saved practice work, weekly goals and classroom management also require their corresponding lesson/class tables and database functions. Those are separate from the base schema.
+4. The bootstrap SQL covers only core profiles, courses, resources and general progress. The connected database also contains lesson, quiz, practice, weekly-goal and classroom features. Their eight live migrations are not yet stored in this repository; see `supabase/README.md`.
 5. Do not rerun schema scripts against an existing project without reviewing them first. They can change database objects and policies.
 
 ## Maintenance notes
