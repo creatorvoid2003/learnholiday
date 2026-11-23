@@ -169,7 +169,7 @@ set search_path = ''
 as $$
 begin
   if new.role is distinct from old.role
-     and coalesce(auth.role(), '') <> 'service_role' then
+     and coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then
     raise exception 'Profile roles can only be changed by an authorised administrator.';
   end if;
 
