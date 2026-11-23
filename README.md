@@ -30,7 +30,7 @@ Open `http://localhost:3000`. The server health check is `/health`.
 1. Keep the project URL and publishable key in `assets/js/supabase-config.js`. Never put a service-role or secret key in browser code.
 2. The Supabase JavaScript library is loaded from jsDelivr by the HTML pages.
 3. Configure the allowed authentication redirect URLs in Supabase for the deployed website and local development address.
-4. The bootstrap SQL covers only core profiles, courses, resources and general progress. The connected database also contains lesson, quiz, practice, weekly-goal and classroom features. Their nine recorded migrations are now stored under `supabase/migrations/`; see `supabase/README.md` for baseline and replay limitations.
+4. The bootstrap SQL covers the core schema. The repository now also contains nine recorded migrations and a `seed.sql` backup of the existing courses, resources and lessons. See `supabase/README.md` for the required setup order and live-project precautions.
 5. Do not rerun schema scripts against an existing project without reviewing them first. They can change database objects and policies.
 
 ## Maintenance notes
