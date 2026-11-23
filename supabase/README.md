@@ -6,6 +6,7 @@ This folder keeps the core schema reference and the SQL migration history for Le
 
 - `bootstrap.sql` — core profiles, courses, learning resources and general progress schema. This is a reference for the original core setup, not a complete database export.
 - `config.toml` — Supabase CLI project configuration.
+- `seed.sql` — backup of the five courses, three resources and fifteen lessons in the connected project. It uses stable IDs and `ON CONFLICT DO NOTHING`.
 - `migrations/` — the nine SQL migrations recovered from the connected project's migration ledger, including the latest security and foreign-key-index update.
 
 ## Feature tables in the connected database
@@ -22,7 +23,7 @@ All public tables currently have Row Level Security enabled. The migration files
 ## Important setup notes
 
 1. The original core schema was applied before the tracked feature migrations and is not itself present in the remote migration ledger. `bootstrap.sql` documents that core setup.
-2. The quiz migration contains seed inserts that reference lesson UUIDs. Those lesson records were created separately and are not present in the database now. A clean rebuild therefore still needs the matching lesson-content seed data before the quiz migration can be replayed. Do not assume the migrations alone are a complete one-command rebuild.
+2. The quiz migration contains seed inserts that reference lesson UUIDs. `seed.sql` now backs up the matching five courses, three resources and fifteen lessons. For a fresh database, run `bootstrap.sql`, then the first migration (`20261105094855_create_course_lessons_and_progress.sql`), then `seed.sql`, and only then run the remaining migrations in timestamp order. This staged setup is needed because the quiz migration depends on those lesson rows.
 3. Do not run `bootstrap.sql` against the existing live project.
 4. Do not use `supabase db reset` on the live project.
 5. Before using `supabase db push`, link the project and compare local and remote migration histories. The initial core schema is not tracked as a remote migration, so reconcile that baseline first.
