@@ -157,6 +157,9 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
 
+-- The trigger invokes this function; browser clients must not call it as an RPC.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 -- 7. PREVENT USERS FROM CHANGING THEIR OWN ROLE
 
 create or replace function public.prevent_profile_role_change()
