@@ -6,36 +6,9 @@
 "use strict";
 
 const LearnHoliday = (() => {
-  const STORAGE_KEYS = {
-    saved: "learnholiday_saved_resources",
-    completed: "learnholiday_completed_activities"
-  };
-
   let supabaseClient = null;
   let currentUser = null;
   let cloudSavedResources = [];
-
-  /* STORAGE */
-
-  function readStorage(key) {
-    try {
-      const value = JSON.parse(localStorage.getItem(key) || "[]");
-      return Array.isArray(value) ? value : [];
-    } catch (error) {
-      console.error("Storage read error:", error);
-      return [];
-    }
-  }
-
-  function writeStorage(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (error) {
-      console.error("Storage write error:", error);
-      return false;
-    }
-  }
 
   function escapeHTML(value) {
     return String(value ?? "").replace(/[&<>"']/g, character => ({
@@ -1334,22 +1307,21 @@ const LearnHoliday = (() => {
   async function init() {
     setupThemeToggle();
     updateYear();
+
     await setupCoursePage();
     await setupLessonPage();
-    setupCourseFilters();
-    setupResourceFilters();
     await loadCourses();
+
     await setupNavigationAuth();
-    setupThemeToggle();
     await setupResourceAuth();
     await loadStudyResources();
-    setupClassroomForm();
+    await setupClassroomForm();
+
     setupRegistration();
     setupLogin();
     setupPasswordRecovery();
 
     await setupDashboardAuth();
-    if (currentUser) { try { await loadUserProgress(); renderDashboard(); updateSaveButtons(); } catch (error) { console.error(error); } }
   }
 
   return {
