@@ -1,28 +1,42 @@
-# Supabase files
+# Supabase project files
 
-This folder contains the **core bootstrap reference**, not a complete export of the live database.
+This folder keeps the core schema reference and the SQL migration history for LearnHoliday.
 
 ## Files
 
-- `bootstrap.sql` — creates the core profiles, courses, learning resources and general progress tables for a fresh project.
+- `bootstrap.sql` — core profiles, courses, learning resources and general progress schema. This is a reference for the original core setup, not a complete database export.
+- `config.toml` — Supabase CLI project configuration.
+- `migrations/` — the nine SQL migrations recovered from the connected project's migration ledger, including the latest security and foreign-key-index update.
 
-## Live database features
+## Feature tables in the connected database
 
-The connected LearnHoliday project also has these feature tables:
-
+- Core: `profiles`, `courses`, `learning_resources`, `user_progress`
 - Lessons: `course_lessons`, `lesson_progress`
 - Quizzes: `lesson_quiz_questions`, `lesson_quiz_attempts`
 - Practice work: `lesson_practice_submissions`
 - Learning goals: `learner_learning_goals`
 - Classrooms: `learning_classes`, `learning_class_memberships`, `learning_class_invites`
 
-The live project records eight migrations (through `tighten_classroom_data_api_grants`). Those migration SQL files are **not currently present in this Git repository**, so this folder is not yet a complete, reproducible database history.
+All public tables currently have Row Level Security enabled. The migration files preserve the SQL statements recorded by the live project's migration history; they are not a newly invented schema.
 
-## Important
+## Important setup notes
 
-- Do not run `bootstrap.sql` on the existing live project as a repair script.
-- Do not use `supabase db reset` on the live project.
-- Keep schema changes as versioned migrations. Create each new migration with `supabase migration new <descriptive_name>`.
-- Never put a Supabase service-role or secret key in browser code. The publishable key in `assets/js/supabase-config.js` is intended for public clients; Row Level Security must protect the data.
-- The signup profile trigger runs automatically. Its function execution is revoked from browser roles because it is not a client RPC.
-- Before changing policies, triggers, functions, or grants, inspect the live definition and test the affected feature.
+1. The original core schema was applied before the tracked feature migrations and is not itself present in the remote migration ledger. `bootstrap.sql` documents that core setup.
+2. The quiz migration contains seed inserts that reference lesson UUIDs. Those lesson records were created separately and are not present in the database now. A clean rebuild therefore still needs the matching lesson-content seed data before the quiz migration can be replayed. Do not assume the migrations alone are a complete one-command rebuild.
+3. Do not run `bootstrap.sql` against the existing live project.
+4. Do not use `supabase db reset` on the live project.
+5. Before using `supabase db push`, link the project and compare local and remote migration histories. The initial core schema is not tracked as a remote migration, so reconcile that baseline first.
+6. Never put a Supabase service-role or secret key in browser code. The publishable key in `assets/js/supabase-config.js` is intended for public clients; Row Level Security must protect the data.
+7. The signup profile trigger and automatic RLS event-trigger function are not client RPCs; browser execution has been revoked. `join_learning_class` remains callable by authenticated users because it validates the learner and enforces class capacity inside the function.
+8. Supabase leaked-password protection is still disabled in Auth settings. Enable it in the Supabase Dashboard under **Authentication → Settings → Password Security**.
+
+## Safe CLI workflow
+
+From the repository root:
+
+```bash
+supabase link --project-ref qczzvfsofyemhzafbxfm
+supabase migration list
+```
+
+Review the local and remote histories before any push. Do not reset the live database or run the bootstrap file on it.
